@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-app-short="Payday" data-app-domain="payday.mcbflow.com">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<title>Payday | Overview</title>
+<meta name="description" content="Free timecard and paycheck tracker in your browser. Log shifts, estimate overtime and take-home pay, and check your paystubs. No account needed.">
+<link rel="canonical" href="https://payday.mcbflow.com/">
+<meta name="theme-color" content="#BE185D">
+<meta name="color-scheme" content="light dark">
+<meta name="application-name" content="Payday">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Payday">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="payday.mcbflow.com">
+<meta property="og:title" content="payday.mcbflow.com · Free timecard and paycheck tracker">
+<meta property="og:description" content="Clock in and out, log shifts and breaks, estimate overtime and take-home pay, and compare it with your paystubs. No account; your records stay in your browser.">
+<meta property="og:url" content="https://payday.mcbflow.com/">
+<meta property="og:image" content="https://payday.mcbflow.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="payday.mcbflow.com: timecard and paycheck tracker, shown with sample shifts">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="payday.mcbflow.com · Free timecard and paycheck tracker">
+<meta name="twitter:description" content="Clock in and out, log shifts and breaks, estimate overtime and take-home pay, and compare it with your paystubs. No account; your records stay in your browser.">
+<meta name="twitter:image" content="https://payday.mcbflow.com/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"payday.mcbflow.com","alternateName":"Payday","url":"https://payday.mcbflow.com/","applicationCategory":"BusinessApplication","operatingSystem":"Any (runs in a web browser)","description":"Free timecard and paycheck tracker in your browser. Log shifts, estimate overtime and take-home pay, and check your paystubs. No account needed.","isAccessibleForFree":true,"author":{"@type":"Person","name":"Matthew Broyer","url":"https://matthewbroyer.com/"}}</script>
+<script src="theme-boot.js"></script>
+<link rel="stylesheet" href="mb-suite-core.css">
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="mb-suite-cutouts.css">
+<link rel="stylesheet" href="mb-suite-sidebar.css">
+<link rel="stylesheet" href="mb-suite-v3.css">
+<link rel="stylesheet" href="app-v3.css">
+<link rel="stylesheet" href="mb-suite-topbar.css">
+</head>
+<body class="mb-shell">
+<a class="skip" href="#main">Skip to content</a>
+<noscript><p class="noscript">payday.mcbflow.com is a free timecard and paycheck tracker that runs in your browser. It needs JavaScript turned on.</p></noscript>
+
+<svg width="0" height="0" class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11 12 4l8 7"/><path d="M6 10v10h12V10"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-calc" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8.5 7h7M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15v2.5M8.5 18h.01M12 18h.01"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3.5h12v17l-2-1.3-2 1.3-2-1.3-2 1.3-2-1.3-2 1.3z"/><path d="M9 8h6M9 11.5h6M9 15h3.5"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M7 16v-5M12 16V7M17 16v-8"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18.5" cy="12" r="1.2"/></symbol>
+  <symbol id="i-data" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7.5" ry="2.8"/><path d="M4.5 6v12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V6M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M10 8.8v6.4l5-3.2z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><rect x="9" y="9" width="6" height="6" rx="1"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M4 14v5.5h16V14M12 4v11M7.5 10.5 12 15l4.5-4.5"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M4 14v5.5h16V14M12 15V4M7.5 8.5 12 4l4.5 4.5"/></symbol>
+  <symbol id="i-sheet" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M4 15h16M10 4v16"/></symbol>
+  <symbol id="i-zip" viewBox="0 0 24 24"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4M10 6h1.5M10 9h1.5M10 12h1.5M9.5 15h2.5v3h-2.5z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 3.5h4M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 12v7h14v-7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 4 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17v.01"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 4v4.5h4.5M12 8v4l3 2"/></symbol>
+  <symbol id="i-job" viewBox="0 0 24 24"><rect x="3.5" y="7.5" width="17" height="12" rx="2"/><path d="M9 7.5V5.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3.5 12.5h17"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/></symbol>
+</svg>
+
+<aside class="mb-side" aria-label="App">
+  <a class="brand" href="./" data-home aria-label="payday.mcbflow.com: go to Overview"><span class="logo"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="pdg1" gradientUnits="userSpaceOnUse" x1="10" y1="0" x2="54" y2="64"><stop offset="0" stop-color="#C73874"/><stop offset=".55" stop-color="#BE185D"/><stop offset="1" stop-color="#98134A"/></linearGradient><clipPath id="pdc1"><rect width="64" height="64" rx="18"/></clipPath></defs><g clip-path="url(#pdc1)"><rect width="64" height="64" fill="url(#pdg1)"/><g transform="translate(3.2 3.6) scale(.9)"><rect x="29.75" y="13" width="4.5" height="6.5" fill="#fff"/><rect x="25.5" y="8.5" width="13" height="6.5" rx="3" fill="#F2B640"/><rect x="42.13" y="19.57" width="5.2" height="8.4" rx="2" fill="#fff" transform="rotate(45 44.73 23.77)"/><circle cx="32" cy="36.5" r="18" fill="#fff"/><path d="M32 25.6v3.2M32 44.6v3.2" stroke="#A8154F" stroke-width="3.4" stroke-linecap="round"/><path d="M37.2 31.4C36.2 29.7 34.3 28.8 32 28.8 29.2 28.8 27.1 30.3 27.1 32.5 27.1 37.4 37.1 35.2 37.1 40.4 37.1 42.7 34.9 44.4 32 44.4 29.5 44.4 27.6 43.4 26.7 41.6" fill="none" stroke="#A8154F" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/></g></g></svg></span><span class="bt"><b>payday<i class="tld">.mcbflow.com</i></b><span>Official Web App · v1.2</span></span></a>
+  <nav class="side-nav" id="sideNav" aria-label="Sections">
+    <button type="button" data-view="home" aria-current="page"><svg class="uic" aria-hidden="true"><use href="#i-home"/></svg><span>Overview</span></button>
+    <button type="button" data-view="timecard"><svg class="uic" aria-hidden="true"><use href="#i-clock"/></svg><span>Timecard</span><b class="count" data-count="shifts"></b></button>
+    <button type="button" data-view="pay"><svg class="uic" aria-hidden="true"><use href="#i-calc"/></svg><span>Pay calculator</span></button>
+    <button type="button" data-view="paystubs"><svg class="uic" aria-hidden="true"><use href="#i-receipt"/></svg><span>Paycheck check</span><b class="count" data-count="stubs"></b></button>
+    <button type="button" data-view="reports"><svg class="uic" aria-hidden="true"><use href="#i-chart"/></svg><span>Reports</span></button>
+  </nav>
+  <nav class="side-nav side-end" aria-label="More">
+    <button type="button" data-view="settings"><svg class="uic" aria-hidden="true"><use href="#i-settings"/></svg><span>Settings</span></button>
+  </nav>
+</aside>
+
+<div class="mb-main">
+  <header class="page-bar">
+    <a class="brand phone-brand" href="./" data-home aria-label="payday.mcbflow.com: go to Overview"><span class="logo"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="pdg2" gradientUnits="userSpaceOnUse" x1="10" y1="0" x2="54" y2="64"><stop offset="0" stop-color="#C73874"/><stop offset=".55" stop-color="#BE185D"/><stop offset="1" stop-color="#98134A"/></linearGradient><clipPath id="pdc2"><rect width="64" height="64" rx="18"/></clipPath></defs><g clip-path="url(#pdc2)"><rect width="64" height="64" fill="url(#pdg2)"/><g transform="translate(3.2 3.6) scale(.9)"><rect x="29.75" y="13" width="4.5" height="6.5" fill="#fff"/><rect x="25.5" y="8.5" width="13" height="6.5" rx="3" fill="#F2B640"/><rect x="42.13" y="19.57" width="5.2" height="8.4" rx="2" fill="#fff" transform="rotate(45 44.73 23.77)"/><circle cx="32" cy="36.5" r="18" fill="#fff"/><path d="M32 25.6v3.2M32 44.6v3.2" stroke="#A8154F" stroke-width="3.4" stroke-linecap="round"/><path d="M37.2 31.4C36.2 29.7 34.3 28.8 32 28.8 29.2 28.8 27.1 30.3 27.1 32.5 27.1 37.4 37.1 35.2 37.1 40.4 37.1 42.7 34.9 44.4 32 44.4 29.5 44.4 27.6 43.4 26.7 41.6" fill="none" stroke="#A8154F" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/></g></g></svg></span><span class="bt"><b>payday<i class="tld">.mcbflow.com</i></b><span>Official Web App · v1.2</span></span></a>
+    <h1 class="page-title" id="pageTitle">Overview</h1>
+    <div class="actions">
+      <div class="searchbox hide-phone" id="searchWrap" hidden>
+        <svg class="uic" aria-hidden="true"><use href="#i-search"/></svg>
+        <input id="search" type="search" placeholder="Search shifts" aria-label="Search shifts (press / to focus)" autocomplete="off">
+      </div>
+      <button type="button" class="bk-chip tb-chip hide-phone" id="bkChip" title="Save a backup now (Ctrl+S)"><svg class="uic" aria-hidden="true"><use href="#i-history"/></svg><span id="bkChipText">Never backed up</span></button>
+      <div class="menu-wrap">
+        <button type="button" class="tb" id="dataBtn" aria-haspopup="true" aria-expanded="false" aria-controls="dataMenu" aria-label="Data: backup, import, export" title="Data: backup, import, export"><svg class="uic" aria-hidden="true"><use href="#i-data"/></svg><span class="tb-lbl">Data</span><svg class="uic tb-chev" aria-hidden="true"><use href="#i-chev"/></svg><span class="tb-dot" id="dataDot" aria-hidden="true" hidden></span></button>
+        <div class="dm-panel" id="dataMenu" role="menu" aria-label="Data" hidden>
+          <button type="button" class="dm-item main" role="menuitem" data-act="saveNow"><svg class="uic" aria-hidden="true"><use href="#i-save"/></svg><span class="dm-t"><b>Save backup now</b><small id="saveNowSub">Choose where to save it the first time</small></span><kbd>Ctrl S</kbd></button>
+          <button type="button" class="dm-item" role="menuitem" data-act="exportJson"><svg class="uic" aria-hidden="true"><use href="#i-download"/></svg><span class="dm-t"><b>Export All (JSON)…</b><small>Full backup: jobs, shifts, paystubs and settings</small></span></button>
+          <button type="button" class="dm-item" role="menuitem" data-act="import"><svg class="uic" aria-hidden="true"><use href="#i-upload"/></svg><span class="dm-t"><b>Import Backup…</b><small>JSON or .zip backup, or a shifts CSV. You check it first</small></span></button>
+          <button type="button" class="dm-item" role="menuitem" data-act="exportPageCsv"><svg class="uic" aria-hidden="true"><use href="#i-sheet"/></svg><span class="dm-t"><b>Export This Page (CSV)…</b><small id="pageCsvSub">Shifts, for Excel or Sheets</small></span></button>
+          <button type="button" class="dm-item" role="menuitem" data-act="exportZip"><svg class="uic" aria-hidden="true"><use href="#i-zip"/></svg><span class="dm-t"><b>Export All (CSV, .zip)…</b><small>JSON backup plus shifts and paystubs CSV in one .zip</small></span></button>
+          <div class="dm-sep" role="separator"></div>
+          <button type="button" class="dm-item" role="menuitem" data-act="removeSample" id="dmRemoveSample" hidden><svg class="uic" aria-hidden="true"><use href="#i-x"/></svg><span class="dm-t"><b>Remove sample data</b><small>Deletes only the labeled sample records</small></span></button>
+          <button type="button" class="dm-item danger" role="menuitem" data-act="clearAll"><svg class="uic" aria-hidden="true"><use href="#i-trash"/></svg><span class="dm-t"><b>Clear all data…</b></span></button>
+          <div class="dm-foot">
+            <div id="bkStatusLine">Never backed up</div>
+            <div id="bkFileLine"></div>
+            <div>Your data is stored in this browser on this device. Clearing your browser data deletes it, so keep a backup.</div>
+          </div>
+        </div>
+      </div>
+      <input type="file" id="importFile" accept=".json,.csv,.zip,application/json,text/csv,application/zip" hidden>
+      <button type="button" class="themesw" id="themeBtn" role="switch" aria-checked="false" aria-label="Dark mode" title="Dark mode"><span class="tk"><svg class="i-sun" viewBox="0 0 20 20" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="3.2"/><path d="M10 2.5v1.8M10 15.7v1.8M2.5 10h1.8M15.7 10h1.8M4.7 4.7l1.3 1.3M14 14l1.3 1.3M4.7 15.3 6 14M14 6l1.3-1.3"/></svg><svg class="i-moon" viewBox="0 0 20 20" width="14" height="14" aria-hidden="true" fill="currentColor"><path d="M16.5 12.2A6.6 6.6 0 0 1 7.8 3.5a6.6 6.6 0 1 0 8.7 8.7Z"/></svg><i class="th"></i></span></button>
+      <button type="button" class="tb tb-primary" id="headerClock" aria-label="Clock in"><svg class="uic" aria-hidden="true"><use href="#i-clock"/></svg><span class="tb-lbl"><span id="headerClockText">Clock in</span><span id="headerClockAmt" class="amt"></span></span></button>
+    </div>
+  </header>
+
+  <div class="store-banner" id="storeBanner" role="alert" hidden>
+    <svg class="uic" aria-hidden="true"><use href="#i-warn"/></svg>
+    <p>Changes aren't being saved in this browser. Export a backup now.</p>
+    <button type="button" class="btn sm" data-act="exportJson">Export All (JSON)…</button>
+  </div>
+
+  <main class="wrap" id="main" tabindex="-1">
+    <div id="view"></div>
+    <div id="settingsTail" class="settings-tail" hidden>
+      <div data-mb-install data-app-name="Payday" data-note="Opens in its own window with its own icon. Works offline after the first visit."></div>
+      <div class="mb-about" role="group" aria-label="About this app">
+        <svg class="uic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5v.01"/></svg>
+        <div>
+          <b>payday.mcbflow.com™</b>
+          <p>Version 1.2 · Oct 14, 2026</p>
+          <p class="mb-about-links"><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="https://mcbflow.com/">More free apps at mcbflow.com</a></p>
+          <p class="mb-about-copy">© 2026 Matthew Broyer. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<nav class="bnav" id="bnav" aria-label="Sections">
+  <button type="button" data-view="home" aria-current="page"><svg class="uic" aria-hidden="true"><use href="#i-home"/></svg><span>Overview</span></button>
+  <button type="button" data-view="timecard"><svg class="uic" aria-hidden="true"><use href="#i-clock"/></svg><span>Timecard</span></button>
+  <button type="button" data-view="pay"><svg class="uic" aria-hidden="true"><use href="#i-calc"/></svg><span>Pay</span></button>
+  <button type="button" data-view="paystubs"><svg class="uic" aria-hidden="true"><use href="#i-receipt"/></svg><span>Paychecks</span></button>
+  <button type="button" id="moreBtn" aria-haspopup="dialog" aria-controls="moreSheet"><svg class="uic" aria-hidden="true"><use href="#i-more"/></svg><span>More</span></button>
+</nav>
+
+<dialog class="dlg sheet" id="moreSheet" aria-labelledby="moreTitle">
+  <div class="dlg-head"><h2 id="moreTitle">More</h2><button type="button" class="btn ghost sm" data-close aria-label="Close">Close</button></div>
+  <div class="more-list">
+    <button type="button" data-view="reports"><svg class="uic" aria-hidden="true"><use href="#i-chart"/></svg><span>Reports</span></button>
+    <button type="button" data-view="settings"><svg class="uic" aria-hidden="true"><use href="#i-settings"/></svg><span>Settings</span></button>
+  </div>
+</dialog>
+
+<dialog class="dlg" id="welcomeDlg" aria-labelledby="welcomeTitle">
+  <div class="welcome-art"><span class="logo lg" aria-hidden="true"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="pdg3" gradientUnits="userSpaceOnUse" x1="10" y1="0" x2="54" y2="64"><stop offset="0" stop-color="#C73874"/><stop offset=".55" stop-color="#BE185D"/><stop offset="1" stop-color="#98134A"/></linearGradient><clipPath id="pdc3"><rect width="64" height="64" rx="18"/></clipPath></defs><g clip-path="url(#pdc3)"><rect width="64" height="64" fill="url(#pdg3)"/><g transform="translate(3.2 3.6) scale(.9)"><rect x="29.75" y="13" width="4.5" height="6.5" fill="#fff"/><rect x="25.5" y="8.5" width="13" height="6.5" rx="3" fill="#F2B640"/><rect x="42.13" y="19.57" width="5.2" height="8.4" rx="2" fill="#fff" transform="rotate(45 44.73 23.77)"/><circle cx="32" cy="36.5" r="18" fill="#fff"/><path d="M32 25.6v3.2M32 44.6v3.2" stroke="#A8154F" stroke-width="3.4" stroke-linecap="round"/><path d="M37.2 31.4C36.2 29.7 34.3 28.8 32 28.8 29.2 28.8 27.1 30.3 27.1 32.5 27.1 37.4 37.1 35.2 37.1 40.4 37.1 42.7 34.9 44.4 32 44.4 29.5 44.4 27.6 43.4 26.7 41.6" fill="none" stroke="#A8154F" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/></g></g></svg></span></div>
+  <h2 id="welcomeTitle">Welcome to payday.mcbflow.com</h2>
+  <p class="dlg-sub">Track your hours and check your pay. Clock in and out or enter past shifts, and the app estimates overtime, gross pay and take-home pay for each pay period. Then compare it with your real paystubs.</p>
+  <ul class="welcome-list">
+    <li>Everything is saved in this browser on this device. No account.</li>
+    <li>Pay and tax figures are rough planning estimates, not payroll or tax advice.</li>
+  </ul>
+  <div class="field-row">
+    <span id="welcomeThemeLbl" class="lbl-sm">Appearance</span>
+    <div class="seg" role="group" aria-labelledby="welcomeThemeLbl">
+      <button type="button" class="chip" data-theme-pick="light" aria-pressed="true"><svg class="uic" aria-hidden="true"><use href="#i-sun"/></svg>Light</button>
+      <button type="button" class="chip" data-theme-pick="dark" aria-pressed="false"><svg class="uic" aria-hidden="true"><use href="#i-moon"/></svg>Dark</button>
+    </div>
+  </div>
+  <p class="hint">Have a backup file? <button type="button" class="linkbtn" id="welcomeImport">Import it now</button></p>
+  <div class="dlg-actions">
+    <button type="button" class="btn" id="welcomeSample">Try it with sample data</button>
+    <button type="button" class="btn primary" id="welcomeStart">Get started</button>
+  </div>
+</dialog>
+
+<dialog class="dlg" id="confirmDlg" aria-labelledby="confirmTitle">
+  <h2 id="confirmTitle">Are you sure?</h2>
+  <p class="dlg-sub" id="confirmBody"></p>
+  <p class="hint" id="confirmBackupRow" hidden><button type="button" class="linkbtn" id="confirmBackup">Save backup first</button></p>
+  <div class="dlg-actions">
+    <button type="button" class="btn" id="confirmCancel">Cancel</button>
+    <button type="button" class="btn danger solid" id="confirmOk">Delete</button>
+  </div>
+</dialog>
+
+<dialog class="dlg" id="importDlg" aria-labelledby="importTitle">
+  <h2 id="importTitle">Import backup</h2>
+  <p class="dlg-sub" id="importFileName"></p>
+  <ul class="import-sum" id="importSummary"></ul>
+  <p class="dlg-sub" id="importNote"></p>
+  <p class="hint" id="importBackupRow"><button type="button" class="linkbtn" id="importBackup">Save backup first</button></p>
+  <div class="dlg-actions">
+    <button type="button" class="btn" id="importCancel">Cancel</button>
+    <button type="button" class="btn danger" id="importReplace">Replace</button>
+    <button type="button" class="btn primary" id="importMerge">Merge</button>
+  </div>
+</dialog>
+
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+<template id="artBanner"><svg class="cu-art" viewBox="0 0 640 136" preserveAspectRatio="xMaxYMax slice" aria-hidden="true" focusable="false"><circle class="b" cx="560" cy="46" r="26"/><path class="s" d="M210 150 C315 80 525 80 630 150Z"/><path class="m" d="M410 150 C485 66 635 66 710 150Z"/><path class="d" d="M530 150 C585 90 695 90 750 150Z"/><path class="n" transform="translate(470 98) rotate(-64) scale(0.5)" d="M0 0 C 20 -34 66 -40 96 -6 C 70 28 22 34 0 0Z"/><path class="d" transform="translate(480 98) rotate(-116) scale(0.4)" d="M0 0 C 20 -34 66 -40 96 -6 C 70 28 22 34 0 0Z"/><circle class="r" cx="360" cy="44" r="6"/></svg></template>
+<template id="artEmpty"><svg class="cu-art inline sm" viewBox="0 0 160 120" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><path class="s" transform="translate(80 98)" d="M-48 2.2 C-48 -15.8 26.4 -16.5 48 -1.5 C49 14.2 -26.4 16.5 -48 2.2Z"/><path class="sd" d="M80 92 C75.6 71.8 83.3 54 80 41.4"/><path class="d" transform="translate(80 41.4) rotate(-38) scale(0.5)" d="M0 0 C 20 -34 66 -40 96 -6 C 70 28 22 34 0 0Z"/><path class="m" transform="translate(80 52.5) rotate(-150) scale(0.4)" d="M0 0 C 20 -34 66 -40 96 -6 C 70 28 22 34 0 0Z"/><circle class="b" cx="122" cy="40" r="7"/><path class="m" transform="translate(40 104)" d="M-13 0.9 C-13 -6.3 7.2 -6.6 13 -0.6 C13.3 5.7 -7.2 6.6 -13 0.9Z"/></svg></template>
+<template id="shareArt"><svg class="cu-art" viewBox="0 0 640 136" preserveAspectRatio="xMaxYMax slice" aria-hidden="true" focusable="false"><circle class="b" cx="560" cy="46" r="26"/><path class="s" d="M210 150 C315 80 525 80 630 150Z"/><path class="m" d="M410 150 C485 66 635 66 710 150Z"/><path class="d" d="M530 150 C585 90 695 90 750 150Z"/><path class="n" transform="translate(470 98) rotate(-64) scale(0.5)" d="M0 0 C 20 -34 66 -40 96 -6 C 70 28 22 34 0 0Z"/><path class="d" transform="translate(480 98) rotate(-116) scale(0.4)" d="M0 0 C 20 -34 66 -40 96 -6 C 70 28 22 34 0 0Z"/><circle class="r" cx="360" cy="44" r="6"/></svg></template>
+
+<script src="mb-title.js"></script>
+<script src="mb-install.js"></script>
+<script src="mb-share.js"></script>
+<script src="vendor/jszip.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
