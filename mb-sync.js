@@ -1,4 +1,4 @@
-/* mb-sync.js 1.0.0 · optional account sync for mcbflow.com apps (shared file: copy it unchanged into each app).
+/* mb-sync.js 1.0.1 · optional account sync for mcbflow.com apps (shared file: copy it unchanged into each app).
    Local-first: the app always saves to the device first; this file mirrors its records to the account
    database when the person is signed in. Signed out, it loads nothing extra and contacts no server.
 
@@ -23,7 +23,7 @@ const SUPABASE_KEY = 'sb_publishable_i786YYip9yEZ_KC0CwOcZw_q7yOIoyM';
 const SESSION_KEY  = 'sb-rxvcjdwmvxhwbdwncfhj-auth-token';   // where supabase-js keeps the sign-in on this site
 const ACCOUNT_URL  = 'https://mcbflow.com/account.html';
 const LIB_SRC      = 'vendor/supabase.js';
-const VERSION      = '1.0.0';
+const VERSION      = '1.0.1';
 const PAGE = 1000, BATCH = 500, PUSH_DELAY = 1200, RETRY_MS = 30000;
 const OVERLAP_MS = 120000;   // re-read the last 2 minutes on each pull, so a slow save that lands late is never skipped
 
@@ -153,13 +153,15 @@ function create(o) {
   }
 
   /* -- local change tracking: compare the app's records with what was last synced -- */
-  function track() {
+  // keepTime: differences found right after the app opens come from the app tidying its own data on load, not from
+  // an edit (edits are tracked when they're saved), so they keep their old time and can't override newer edits from other devices.
+  function track(keepTime) {
     if (!user || linking) return 0;
     let recs; try { recs = o.toRecords() || {}; } catch (e) { return 0; }
     const now = Date.now(); let n = 0;
     for (const k of Object.keys(recs)) {
       const hv = hash(recs[k]);
-      if (meta.h[k] !== hv) { meta.h[k] = hv; meta.t[k] = now; meta.dirty[k] = 1; n++; }
+      if (meta.h[k] !== hv) { meta.h[k] = hv; meta.t[k] = keepTime ? (meta.t[k] || 1) : now; meta.dirty[k] = 1; n++; }
     }
     for (const k of Object.keys(meta.h)) {
       if (!(k in recs)) { delete meta.h[k]; meta.t[k] = now; meta.dirty[k] = 1; n++; }   // deleted locally → tombstone
@@ -226,7 +228,7 @@ function create(o) {
   // Apply remote rows to the app: newest edit wins per record.
   function applyRows(rows, opts) {
     opts = opts || {};
-    track();   // capture any local edit first, so it can win if it's newer
+    track(opts.startup);   // capture any local edit first, so it can win if it's newer
     let recs = {}; try { recs = Object.assign({}, o.toRecords() || {}); } catch (e) {}
     let n = 0;
     for (const r of rows) {
@@ -253,7 +255,7 @@ function create(o) {
     return n;
   }
 
-  async function pull() {
+  async function pull(startup) {
     if (!user || !sb) return 0;
     if (pulling) return pulling;
     pulling = (async () => {
@@ -261,7 +263,7 @@ function create(o) {
       setState('syncing');
       const since = meta.cursor ? new Date(Date.parse(meta.cursor) - OVERLAP_MS).toISOString() : null;
       const rows = await fetchRows(since);
-      const n = applyRows(rows);
+      const n = applyRows(rows, { startup });
       meta.last = Date.now(); saveMeta();
       setState('idle');
       return n;
@@ -272,7 +274,7 @@ function create(o) {
     return pulling;
   }
 
-  async function sync() { if (!user) return; await pull(); track(); await push(); }
+  async function sync(startup) { if (!user) return; await pull(startup); track(startup); await push(); }
 
   /* -- first sign-in on this device: decide how local and account data combine -- */
   async function link() {
@@ -345,7 +347,7 @@ function create(o) {
   }
   async function afterSignIn() {
     if (meta.uid !== user.id) await link();
-    else await sync();
+    else await sync(true);
     try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
   }
   async function signOut(silent) {
