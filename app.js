@@ -6,7 +6,7 @@
 const KEY='payday';
 const THEME_KEY='payday.theme';
 const K_LAST='payday.lastBackup', K_FILE='payday.backupFile', K_WELCOME='payday.welcomed', K_TC='payday.timecard', K_PROBE='payday.probe';
-const APP_DOMAIN='payday.mcbflow.com', OLD_DOMAIN='mbpayday.online', APP_VERSION='1.2', BACKUP_FORMAT=1;
+const APP_DOMAIN='payday.mcbflow.com', OLD_DOMAIN='mbpayday.online', APP_VERSION='1.3', BACKUP_FORMAT=1;
 const SAMPLE_JOB='Sample job', SAMPLE_NOTE='Sample record', LEGACY_DEMO='DEMO · Sample records';
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
@@ -27,7 +27,7 @@ function normalizeState(obj){
  META_KEYS.forEach(k=>delete out[k]);
  return out;
 }
-let state, loadNote='';
+let state, loadNote='', SYNC=null;
 {const raw=lsGet(KEY);
  if(raw==null)state=defaultState();
  else{try{state=normalizeState(JSON.parse(raw))}catch(e){lsSet('payday.unreadable',raw);state=defaultState();loadNote='Your saved data could not be read, so the app started empty. A copy of it was kept in this browser.'}}}
@@ -130,7 +130,7 @@ function timeFmt(dt,refDay){const d=toDate(dt);if(!d)return esc(dt||'');const t=
 const hrsWords=h=>(Math.round(h*100)/100).toLocaleString('en-US',{maximumFractionDigits:2});
 
 /* ---------------------------------------------------------------- persistence */
-function save(){const ok=lsSet(KEY,JSON.stringify(state));if(ok!==storageOK){storageOK=ok;$('#storeBanner').hidden=ok}return ok}
+function save(){const ok=lsSet(KEY,JSON.stringify(state));if(ok!==storageOK){storageOK=ok;$('#storeBanner').hidden=ok}if(SYNC)SYNC.changed();return ok}
 
 /* ---------------------------------------------------------------- toasts (success ~4s, Undo ~6s) */
 function toast(msg,undo,label='Undo'){
@@ -487,7 +487,8 @@ function finishImport(mode){
 
 /* ---------------------------------------------------------------- clear all data */
 async function clearAll(){closeMenu();
- const ok=await askConfirm({title:'Clear all data?',body:`This deletes all ${state.shifts.length} shift${state.shifts.length===1?'':'s'}, ${state.paystubs.length} paystub${state.paystubs.length===1?'':'s'}, your jobs and settings from this browser. It can't be undone.`,ok:'Clear all data',backup:hasData()});
+ const synced=SYNC&&SYNC.status().signedIn;
+ const ok=await askConfirm({title:'Clear all data?',body:`This deletes all ${state.shifts.length} shift${state.shifts.length===1?'':'s'}, ${state.paystubs.length} paystub${state.paystubs.length===1?'':'s'}, your jobs and settings from this browser.${synced?' You’re signed in to sync, so they’re also deleted from your account and your other devices. To clear only this device, sign out first (Data → Sync).':''} It can't be undone.`,ok:'Clear all data',backup:hasData()});
  if(!ok)return;state=defaultState();ensureJobs();save();lsDel(K_LAST);lsDel(K_TC);await handleClear();search='';tcJob='';editingId=null;editingJobId=null;page='home';render();notify('All data cleared')}
 
 /* ---------------------------------------------------------------- backup status chip */
@@ -515,7 +516,27 @@ function shareYear(){const year=today().slice(0,4),list=state.shifts.filter(s=>(
 /* ---------------------------------------------------------------- Data menu */
 function openMenu(){const m=$('#dataMenu');m.hidden=false;$('#dataBtn').setAttribute('aria-expanded','true');updateBackupUI();const f=m.querySelector('.dm-item:not([hidden])');if(f)f.focus()}
 function closeMenu(focusBtn){const m=$('#dataMenu');if(m.hidden)return;m.hidden=true;$('#dataBtn').setAttribute('aria-expanded','false');if(focusBtn)$('#dataBtn').focus()}
-const MENU={saveNow,exportJson:exportJSON,import:()=>{closeMenu();$('#importFile').click()},exportPageCsv:exportPageCSV,exportZip:exportZIP,removeSample:()=>{closeMenu();removeSampleData()},clearAll};
+const MENU={sync:()=>{closeMenu();if(SYNC)SYNC.open()},saveNow,exportJson:exportJSON,import:()=>{closeMenu();$('#importFile').click()},exportPageCsv:exportPageCSV,exportZip:exportZIP,removeSample:()=>{closeMenu();removeSampleData()},clearAll};
+
+/* ---------------------------------------------------------------- optional account sync (mb-sync.js) */
+// Each shift and paystub is its own record; settings, jobs and the running clock are one record each. Sample records never sync.
+function syncRecords(){
+ const r={settings:state.settings,jobs:state.jobs,active:state.activeShift,meta:{version:state.version,createdAt:state.createdAt}};
+ for(const x of state.shifts){if(isSampleShift(x))continue;if(!x.id)x.id=uid();r['shift:'+x.id]=x}
+ for(const x of state.paystubs){if(isSampleStub(x))continue;if(!x.id)x.id=uid();r['stub:'+x.id]=x}
+ return r}
+function syncApply(m){
+ const list=pre=>Object.keys(m).filter(k=>k.startsWith(pre)).map(k=>m[k]).filter(x=>x&&typeof x==='object'),meta=m.meta||{};
+ state=normalizeState({version:meta.version||state.version,createdAt:meta.createdAt||state.createdAt,settings:m.settings||state.settings,jobs:Array.isArray(m.jobs)?m.jobs:state.jobs,activeShift:m.active||null,
+  shifts:[...list('shift:'),...state.shifts.filter(isSampleShift)],paystubs:[...list('stub:'),...state.paystubs.filter(isSampleStub)]});
+ ensureJobs();save();
+ if(!formDirty&&!editingId&&!editingJobId)render();else updateClockButton()}   // don't wipe a form the person is typing in
+function updateSyncUI(st){
+ const t=$('#dmSyncTitle'),sub=$('#dmSyncSub');if(!t)return;
+ t.textContent=st.signedIn?`Sync: ${st.label}`:'Sync across devices…';
+ sub.textContent=st.signedIn?st.email:'Optional free account. Your data stays on this device too'}
+if(window.MBSync)SYNC=MBSync.create({app:'payday',label:'Payday',toRecords:syncRecords,fromRecords:syncApply,
+ hasData:()=>state.shifts.some(x=>!isSampleShift(x))||state.paystubs.some(x=>!isSampleStub(x)),onStatus:updateSyncUI});
 
 /* ---------------------------------------------------------------- wire up the shell */
 $('#dataBtn').onclick=e=>{e.stopPropagation();if($('#dataMenu').hidden)openMenu();else closeMenu()};

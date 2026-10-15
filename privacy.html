@@ -35,12 +35,12 @@ footer{max-width:760px;margin:0 auto 32px;padding:0 16px;color:var(--muted);font
 <header><a class="brand" href="./"><img src="favicon.svg" alt="" width="32" height="32">payday.mcbflow.com</a></header>
 <main>
 <h1>Privacy</h1>
-<p class="meta">Effective 2026-10-14</p>
+<p class="meta">Effective 2026-10-15</p>
 
-<p>payday.mcbflow.com is a free timecard and paycheck tracker that runs in your browser. It has no accounts and no sign-in. There are no analytics, ads or tracking scripts, and the app doesn't load anything from other websites.</p>
+<p>payday.mcbflow.com is a free timecard and paycheck tracker that runs in your browser. You don't need an account: everything works and saves on your device. If you choose to, you can sign in with a free mcbflow.com account to sync your records across your devices. There are no analytics, ads or tracking scripts, and the app doesn't load code from other websites.</p>
 
 <h2>What stays on your device</h2>
-<p>Everything you enter is saved in your browser's storage on this device. It isn't sent to us, and we can't see it. It isn't encrypted, so anyone who can use this browser profile can read it.</p>
+<p>Everything you enter is saved in your browser's storage on this device. Unless you sign in to sync, it isn't sent anywhere and we can't see it. It isn't encrypted, so anyone who can use this browser profile can read it.</p>
 <ul>
 <li><code>payday</code>: your jobs, shifts, paystub figures, notes and settings (state, filing status, deductions, currency), plus a shift you're clocked in to</li>
 <li><code>payday.theme</code>: whether you chose light or dark mode</li>
@@ -48,13 +48,16 @@ footer{max-width:760px;margin:0 auto 32px;padding:0 16px;color:var(--muted);font
 <li><code>payday.backupFile</code>: the name of the backup file you chose (only the name, not the folder)</li>
 <li><code>payday.welcomed</code>: that you've seen the welcome screen</li>
 <li><code>payday.timecard</code>: which job the Timecard list was filtered to</li>
+<li><code>payday.sync</code> (only if you sign in to sync): which records have synced and when, so only changes are sent</li>
+<li><code>sb-…-auth-token</code> (only while you're signed in): your sign-in, removed when you sign out</li>
 <li>A small browser database named <code>payday.backup</code>: on browsers that support it (Chrome and Edge on a computer), the file you picked for "Save backup now", so the app can update that same file</li>
 </ul>
 <p>Clearing your browser's site data, or using <b>Data → Clear all data</b> in the app, removes it. If you install the app, your browser also keeps a copy of the app's files (not your data) so it opens offline.</p>
 
 <h2>What leaves your device</h2>
 <ul>
-<li>Nothing. The app makes no requests to other services.</li>
+<li><b>If you're not signed in:</b> nothing. The app makes no requests to other services.</li>
+<li><b>If you sign in to sync:</b> your jobs, shifts, paystub figures, notes and settings are copied to your mcbflow.com account so your other devices can get them. Sample records aren't synced. The account database is run by Supabase (servers in the eastern United States) and only your account can read your records. Signing out stops syncing and keeps the data on this device. You can export or delete your synced data, or delete your account, on the <a href="https://mcbflow.com/account.html">mcbflow.com account page</a>. More detail is in the <a href="https://mcbflow.com/#privacy">mcbflow.com privacy policy</a>.</li>
 </ul>
 <p>Our web host receives the standard request information every website receives (such as IP address and browser type) to deliver the pages. That's handled by the hosting company under its own privacy policy.</p>
 

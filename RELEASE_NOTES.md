@@ -2,6 +2,12 @@
 
 Newest first. One entry per release, in plain words a user would understand.
 
+## 1.3 · 2026-10-15
+- New: optional sync across devices. Data → Sync signs in with a free mcbflow.com account; shifts, paystubs, jobs, settings and a running clock stay in step on every device you sign in on. Everything still saves on this device first and works offline; changes sync when you're back online.
+- First sign-in on a device that already has records asks whether to merge, use the account's copy, or use this device's copy.
+- Sample records never sync. Clear all data warns when you're signed in, since it clears synced data too.
+- Not signed in: nothing changes, and the app contacts no server.
+
 ## 1.2 · 2026-10-14
 
 - **Moved to payday.mcbflow.com.** Data saved at mbpayday.online doesn't carry over: export a backup there and import it here.
