@@ -1,4 +1,4 @@
-# Attributions · Payday (mbpayday.online)
+# Attributions · Payday (payday.mcbflow.com)
 
 Made by Matthew Broyer. App code, icons, logo and OG image are original work unless listed below.
 

@@ -2,8 +2,8 @@
    Network-first for the app's own files, cache as the offline fallback. Never touches user data
    (localStorage / IndexedDB are not involved), never intercepts non-GET or cross-origin requests.
    VERSION changes automatically whenever a cached file changes (make_release.py build). */
-const VERSION = 'payday-v1.3';
-const SHELL = ['./', 'index.html', 'manifest.json', 'favicon.svg', 'favicon.ico', 'apple-touch-icon.png', 'theme-boot.js', 'mb-suite-core.css', 'app.css', 'mb-suite-cutouts.css', 'mb-suite-sidebar.css', 'mb-suite-v3.css', 'app-v3.css', 'mb-suite-topbar.css', 'privacy.html', 'terms.html', 'mb-title.js', 'mb-install.js', 'mb-share.js', 'vendor/jszip.min.js', 'vendor/supabase.js', 'mb-sync.js', 'app.js', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
+const VERSION = 'payday-v1.4';
+const SHELL = ['./', 'index.html', 'manifest.json', 'favicon.svg', 'favicon.ico', 'apple-touch-icon.png', 'theme-boot.js', 'mb-suite-core.css', 'app.css', 'mb-suite-cutouts.css', 'mb-suite-sidebar.css', 'mb-suite-v3.css', 'app-v3.css', 'mb-suite-topbar.css', 'privacy.html', 'terms.html', 'mb-title.js', 'mb-install.js', 'mb-share.js', 'vendor/jszip.min.js', 'vendor/supabase.js', 'mb-sync.js', 'mb-files.js', 'app.js', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

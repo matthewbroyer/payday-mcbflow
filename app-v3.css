@@ -36,3 +36,62 @@
 @media (min-width:768px){.phone-search{display:none}}
 .phone-search .searchbox input{width:100%;height:var(--ctl)}
 .store-banner{margin-left:max(var(--gutter),calc((100% - var(--page-max)) / 2 + var(--gutter)));margin-right:max(var(--gutter),calc((100% - var(--page-max)) / 2 + var(--gutter)))}
+
+/* =====================================================================
+   v3.3 (2026-10-16) · Payday pieces next to the shared top-bar/welcome/Data/Settings/footer rules (mb-suite-topbar.css 3.3.0)
+   ===================================================================== */
+/* search box in the bar: same height as every other bar control */
+.page-bar .actions .searchbox input{height:var(--tb-h);box-sizing:border-box}
+.page-bar .actions .bk-chip{height:var(--tb-h)}
+/* Data menu: anchored under the Data button on desktop (phones get the shared bottom sheet) */
+.menu-wrap>.mb-dm{position:absolute;right:0;top:calc(100% + 6px)}
+.mb-dm-note [data-change-loc]{min-height:24px}
+.mb-dm-note b{color:var(--ink-2)}
+/* welcome: icons from the app sprite */
+.mbw .uic{width:16px;height:16px}
+.mbw-ic .uic{width:17px;height:17px}
+.mbw-look>span:last-child{display:inline-flex;align-items:center;gap:6px}
+/* Settings page */
+.mb-set-c .fsel{width:220px;max-width:100%}
+.mb-set-c .fsel.num{min-width:140px;width:140px}
+.mb-set-card .set-form{margin:12px 0}
+.mb-set-card .set-form h3{margin:0 0 12px;font-size:15px;font-weight:650}
+.mb-set-card .set-hint{margin:0;padding:10px 0 12px;border-top:1px solid var(--border)}
+.mb-set-l .tag{margin-left:4px}
+.mb-set-sec .mb-install,.mb-set-sec .mb-about{margin-top:0}
+.mb-about .mb-about-links button{font-size:inherit}
+@media (max-width:767px){.mb-set-c .fsel,.mb-set-c .fsel.num{width:100%;min-width:0}}
+/* What's new dialog */
+.news-list{margin:0 0 12px;padding-left:20px;font-size:13.5px;color:var(--ink)}
+.news-list li{margin:4px 0}
+.chart-hint{font-size:12px;color:var(--muted)}
+
+/* ---- monthly earnings chart (SUITE-STANDARDS §2 "Charts") ---- */
+.mchart{position:relative;padding-left:50px;margin-top:4px}
+.mgrid{position:absolute;left:50px;right:0;top:0;height:150px;pointer-events:none}
+.mg,.mt{position:absolute;left:0;right:0;height:0;border-top:1px solid var(--border)}
+.mg.m0{bottom:0;border-top-color:var(--border-strong)}
+.mg em{position:absolute;right:calc(100% + 8px);top:0;transform:translateY(-50%);font-style:normal;font-size:10.5px;line-height:1;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.mt{border-top:1.5px dashed var(--ink-2);opacity:.75;z-index:2}
+.mcols{position:relative;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px}
+.mcol{display:grid;grid-template-rows:150px auto;justify-items:center;min-width:0;padding:0;border:0;border-radius:var(--r-sm);background:none;font:inherit;color:inherit;cursor:pointer}
+.mcol:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mtrack{display:flex;align-items:flex-end;justify-content:center;width:100%;height:100%}
+.mbar{display:block;width:70%;max-width:30px;min-height:2px;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--accent),color-mix(in srgb,var(--accent) 78%,var(--surface)));
+  transition:height .15s ease,opacity .15s ease,filter .15s ease}
+.mcol small{padding-top:6px;font-size:10.5px;font-weight:600;line-height:1.1;color:var(--muted)}
+.mcol.cur small{color:var(--ink);font-weight:700}
+.mcol:hover .mbar,.mcol.tipon .mbar{filter:brightness(1.1) saturate(1.1)}
+.mcols:has(.mcol.tipon) .mcol:not(.tipon) .mbar{opacity:.45}
+.mlegend{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:12px 0 0;font-size:12px;color:var(--muted)}
+.mlegend i{width:16px;border-top:1.5px dashed var(--ink-2)}
+.ctip{position:fixed;z-index:90;display:flex;flex-direction:column;gap:1px;max-width:240px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;
+  background:var(--surface);color:var(--ink);box-shadow:var(--shadow-pop);font-size:12px;line-height:1.35;pointer-events:none;font-variant-numeric:tabular-nums}
+.ctip[hidden]{display:none}
+.ctip b{font-size:14.5px}
+.ctip span{color:var(--muted)}
+@media (max-width:420px){.mchart{padding-left:40px}.mgrid{left:40px}.mcols{gap:1px}.mcol small{font-size:9.5px}}
+@media (prefers-reduced-motion:reduce){.mbar{transition:none}}
+/* Install section: when the browser offers no install (MBInstall hides its box), say how instead of leaving the heading empty */
+.inst-fallback{display:none;margin:0;font-size:13px;color:var(--ink-2)}
+[data-mb-install][hidden] + .inst-fallback{display:block}
