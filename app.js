@@ -6,7 +6,7 @@
 const KEY='payday';
 const THEME_KEY='payday.theme';
 const K_LAST='payday.lastBackup', K_FILE='payday.backupFile', K_WELCOME='payday.welcomed', K_TC='payday.timecard', K_PROBE='payday.probe';
-const APP_DOMAIN='payday.mcbflow.com', OLD_DOMAIN='mbpayday.online', APP_VERSION='1.4', BACKUP_FORMAT=1;   // legacy-import: backups made at the old address still import
+const APP_DOMAIN='payday.mcbflow.com', OLD_DOMAIN='mbpayday.online', APP_VERSION='1.6', BACKUP_FORMAT=1;   // legacy-import: backups made at the old address still import
 const SAMPLE_JOB='Sample job', SAMPLE_NOTE='Sample record', LEGACY_DEMO='DEMO · Sample records';
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
@@ -15,6 +15,26 @@ const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMon
 const uid=()=>{try{if(crypto.randomUUID)return crypto.randomUUID().replace(/-/g,'').slice(0,16)}catch(e){}return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)};
 const defaultState=()=>({version:1,settings:{jobName:'My job',hourlyRate:20,payFrequency:'biweekly',payday:5,weekStarts:1,otThreshold:40,otMultiplier:1.5,doubleThreshold:0,doubleMultiplier:2,shiftDiff:0,state:'NH',filing:'single',extraWithholding:0,pretaxDeductions:0,posttaxDeductions:0,workweekStart:'2026-01-05',currency:'USD',reminders:false},shifts:[],paystubs:[],jobs:[],activeShift:null,createdAt:new Date().toISOString()});
 const META_KEYS=['app','format','appVersion','exportedAt'];
+/* Release notes, newest first: the What's new dialog (MBUI.whatsNew) is built from this list. */
+const RELEASES=[
+ {version:'1.6',date:'2026-10-17',items:[
+  'New Help page (in the sidebar, and under More on phones): how to get started and answers to common questions.',
+  'Search from the top bar: find any shift, paystub or job and open it. On a computer, press / or Ctrl+K.',
+  'Settings save as you change them, so the Save settings button is gone. The take-home estimate settings are now part of Payday settings.',
+  'New here? The welcome screen asks whether to start empty or with sample data. Payday starts empty unless you pick sample data.',
+  'Deleting a job happens right away, with Undo, the same as shifts and paystubs.',
+  'Backups and exports save right away even when there are no shifts yet. Shared pictures have the date in their file name.',
+  'The Home banner reads “This pay period”, with today’s date and your hours so far.',
+  'Month labels on the earnings chart show the year (Jan ’26).',
+  'Messages, the More menu, What’s new and empty pages look and work the same as in the other mcbflow.com apps.',
+  'Your shifts, paystubs, jobs and settings are unchanged.']},
+ {version:'1.5',date:'2026-10-17',items:[
+  'Clear all data now asks you to type DELETE, the same in every mcbflow.com app. The same box offers Save a backup first.',
+  'A very long job name, employer or note no longer makes Home, Pay, Paycheck check, Reports or Settings scroll sideways on phones.',
+  'Account pop-up spacing fixed.',
+  'The welcome banner art is no longer cut off on phones, and the banner keeps one height.']},
+ {version:'1.4',date:'2026-10-16',items:['A new Settings page, an account button, a clearer Data menu, a bar chart in Reports, a new welcome screen and the slate color.']},
+ {version:'1.3',date:'2026-10-15',items:['Optional sync across devices with a free mcbflow.com account.']}];
 
 /* ---------------------------------------------------------------- storage (every write wrapped; failures show a banner) */
 let storageOK=true;
@@ -121,7 +141,13 @@ function field(label,name,value,type='text',opts={}){return `<div class="field $
 function viewHead(title,desc,actions=''){return `<div class="view-head"><div class="vh-txt"><h2>${title}</h2><p>${desc}</p></div>${actions?`<div class="actions no-print">${actions}</div>`:''}</div>`}
 function stat(label,value,sub='',cls=''){return `<div class="card ${cls}"><div class="statlabel">${label}</div><div class="stat">${value}</div><div class="sub">${sub}</div></div>`}
 const art=id=>`<span data-art="${id}"></span>`;
-function emptyState(title,why,action=''){return `<div class="empty">${art('artEmpty')}<b>${title}</b><p>${why}</p>${action}</div>`}
+/* empty screens: a placeholder in the view's HTML, filled with the shared MBUI.empty block after render */
+const EMPTIES={
+ shifts:{title:'No shifts yet',text:'Clock in or add a past shift, and your hours and pay for this pay period add up here.',action:{label:'Add shift',fn:()=>action('newshift')}},
+ paystubs:{title:'No paystubs yet',text:'Add the gross and net pay from a real paystub to compare it with your time records.',action:{label:'Add paystub',fn:()=>action('newstub')}},
+ reports:{title:'No shifts yet',text:'Your hours and earnings by job show up here once you record shifts.',action:{label:'Add shift',fn:()=>action('newshift')}}};
+const emptyState=k=>`<div class="mb-empty-slot" data-empty="${k}"></div>`;
+function fillEmpties(root){$$('[data-empty]',root).forEach(el=>MBUI.empty(el,EMPTIES[el.dataset.empty]))}
 const isSampleShift=s=>!!(s&&(s.sample||String(s.notes||'').startsWith(LEGACY_DEMO)));
 const isSampleStub=p=>!!(p&&(p.sample||String(p.notes||'').startsWith(LEGACY_DEMO)));
 const sampleTag=on=>on?' <span class="tag accent">Sample</span>':'';
@@ -133,14 +159,8 @@ const hrsWords=h=>(Math.round(h*100)/100).toLocaleString('en-US',{maximumFractio
 /* ---------------------------------------------------------------- persistence */
 function save(){const ok=lsSet(KEY,JSON.stringify(state));if(ok!==storageOK){storageOK=ok;$('#storeBanner').hidden=ok}if(SYNC)SYNC.changed();return ok}
 
-/* ---------------------------------------------------------------- toasts (success ~4s, Undo ~6s) */
-function toast(msg,undo,label='Undo'){
- const host=$('#toasts'),t=document.createElement('div');t.className='toast';
- const span=document.createElement('span');span.textContent=msg;t.appendChild(span);
- if(undo){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>{t.remove();undo()};t.appendChild(b)}
- host.innerHTML='';host.appendChild(t);
- clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.remove(),undo?6000:4000);
-}
+/* ---------------------------------------------------------------- toasts: the shared MBUI.toast (one message, optional Undo) */
+function toast(msg,undo,label='Undo'){return MBUI.toast(String(msg),undo?{action:{label,fn:undo}}:{})}
 const notify=msg=>toast(msg);
 
 /* ---------------------------------------------------------------- theme */
@@ -153,32 +173,33 @@ let lastFocus=null;
 function openDlg(d){lastFocus=document.activeElement;if(!d.open)d.showModal()}
 function closeDlg(d){if(d.open)d.close();if(lastFocus&&document.contains(lastFocus))try{lastFocus.focus()}catch(e){}}
 // One confirm dialog for the whole app: names what's lost, Cancel is focused, optional "Save backup first".
-function askConfirm({title,body,ok='Delete',danger=true,backup=false,cancel='Cancel'}){
+function askConfirm({title,body,ok='Delete',danger=true,cancel='Cancel'}){
  return new Promise(res=>{const d=$('#confirmDlg');$('#confirmTitle').textContent=title;$('#confirmBody').textContent=body;
-  const okb=$('#confirmOk');okb.textContent=ok;okb.className='btn '+(danger?'danger solid':'primary');$('#confirmCancel').textContent=cancel;$('#confirmBackupRow').hidden=!backup;
+  const okb=$('#confirmOk');okb.textContent=ok;okb.className='btn '+(danger?'danger solid':'primary');$('#confirmCancel').textContent=cancel;
   const done=v=>{d.onclose=null;closeDlg(d);res(v)};
   okb.onclick=()=>done(true);$('#confirmCancel').onclick=()=>done(false);d.onclose=()=>{d.onclose=null;res(false)};
-  $('#confirmBackup').onclick=()=>saveNow();
   openDlg(d);$('#confirmCancel').focus()})}
 async function guardLeave(){if(!formDirty)return true;const ok=await askConfirm({title:'Discard changes?',body:'You have unsaved changes in this form.',ok:'Discard',cancel:'Keep editing'});if(ok)formDirty=false;return ok}
 
 /* ---------------------------------------------------------------- navigation */
-const VIEWS={home:'Home',timecard:'Timecard',pay:'Pay calculator',paystubs:'Paycheck check',reports:'Reports',settings:'Settings'};
+const VIEWS={home:'Home',timecard:'Timecard',pay:'Pay calculator',paystubs:'Paycheck check',reports:'Reports',settings:'Settings',help:'Help'};
+const MORE_VIEWS=['settings','reports','help'];   // phone: under More (Settings, other views in sidebar order, Help)
 async function go(v,opts={}){if(!VIEWS[v])v='home';if(v!==page||opts.force){if(!(await guardLeave()))return;editingId=null;editingJobId=null}page=v;render();if(!opts.keepScroll)window.scrollTo(0,0)}
 
 function render(){
  formDirty=false;
  $$('[data-view]').forEach(b=>{if(b.dataset.view===page)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
- const more=$('#moreBtn');if(['reports','settings'].includes(page))more.setAttribute('aria-current','page');else more.removeAttribute('aria-current');
+ const more=$('#moreBtn');if(MORE_VIEWS.includes(page))more.setAttribute('aria-current','page');else more.removeAttribute('aria-current');
  $('#pageTitle').textContent=VIEWS[page];MBTitle.set(VIEWS[page]);
  const cs=$('[data-count=shifts]'),cp=$('[data-count=stubs]');cs.textContent=state.shifts.length||'';cp.textContent=state.paystubs.length||'';
- $('#searchWrap').hidden=page!=='timecard';
  updateClockButton();chartTip.hide();
  const main=$('#view');
- main.innerHTML=({home:renderHome,timecard:renderTimecard,pay:renderPay,paystubs:renderPaystubs,reports:renderReports,settings:renderSettings}[page]||renderHome)()+(page==='settings'?'':footHTML());
+ main.innerHTML=({home:renderHome,timecard:renderTimecard,pay:renderPay,paystubs:renderPaystubs,reports:renderReports,settings:renderSettings,help:renderHelp}[page]||renderHome)()+(page==='settings'?'':footHTML());
  $$('[data-art]',main).forEach(el=>{const t=document.getElementById(el.dataset.art);if(t)el.replaceWith(t.content.firstElementChild.cloneNode(true))});
+ fillEmpties(main);
+ const sn=$('#sampleNote');if(sn)MBUI.sample(sn,{onRemove:removeSampleData,text:'It’s labeled Sample wherever it shows up.'});
  bindPage();
- if(page==='settings'){MBInstall.render();const sc=$('#syncCard');if(sc&&SYNC)SYNC.card(sc)}
+ if(page==='settings'){installRender();const sc=$('#syncCard');if(sc&&SYNC)SYNC.card(sc)}
  const gr=$('#greet');if(gr){if(SYNC)SYNC.greet(gr,{name:''});else gr.hidden=true}   // "Good morning, Matthew" (screen name when signed in); Payday stores no name of its own
  lastQuiet=quiet();updateBackupUI();tick();
 }
@@ -187,10 +208,10 @@ function updateClockButton(){const b=$('#headerClock');b.querySelector('use').se
 /* ---------------------------------------------------------------- views */
 function renderHome(){
  const jp=jobPeriods(),ps=jp.flatMap(p=>p.shifts),t=totals(ps),net=periodNet(jp),rl=rangeLabel(jp),ws=jobCfg().weekStarts,np=nextPayday(state.settings.jobName),week=periodShifts({start:weekStartDate(today(),ws),end:weekEndFromStart(weekStartDate(today(),ws))}),wt=totals(week),recent=allSorted().slice(0,5);
- const subBits=[`Pay period ${rl}`,`${week.length} shift${week.length===1?'':'s'} this week`];if(np)subBits.push(`next payday ${dateFmt(np)}`);
- return `<section class="cu-banner">${art('artBanner')}<div class="cu-txt"><p class="mb-greet" id="greet"></p><h2 class="cu-t">Track your hours. Check your pay.</h2><p class="cu-s">${hasData()?subBits.join(' · '):'Clock in or add a shift to get started.'}</p></div></section>
+ const detail=state.activeShift?`on the clock since ${timeFmt(state.activeShift.start)}`:ps.length?`${hrsWords(t.hours)} hour${t.hours===1?'':'s'} logged so far`:'clock in or add a shift to start';
+ return `<section class="cu-banner">${art('artBanner')}<div class="cu-txt"><p class="mb-greet" id="greet"></p><h2 class="cu-t">This pay period</h2><p class="cu-s">${esc(MBUI.dateLine())} · ${esc(detail)}</p></div></section>
+ ${hasSample()?'<div id="sampleNote"></div>':''}
  ${loadNote?`<div class="notice warn">${ic('warn')}<div>${esc(loadNote)}</div></div>`:''}
- ${hasSample()?`<div class="notice accent">${ic('info')}<div>You're looking at sample data. It's labeled <span class="tag accent">Sample</span> everywhere it shows up. <button type="button" class="linkbtn" data-action="removeSample">Remove sample data</button></div></div>`:''}
  ${state.activeShift?`<div class="notice good">${ic('clock')}<div><strong>Shift in progress</strong> · Started ${new Date(state.activeShift.start).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})} · ${esc(state.activeShift.job)} · Earned so far: <strong data-live-earn>${money(shiftPay(state.activeShift).gross)}</strong>. Remember to clock out when you finish.</div></div>`:''}
  <div class="cards">${stat('Hours this pay period',fmtHours(t.hours),rl,'cu-hero')}${stat('Estimated gross',money(t.gross),`${fmtHours(t.reg)} regular · ${fmtHours(t.ot)} overtime`)}${stat('Estimated take-home',money(net.net),'Rough estimate after modeled deductions')}${stat('Hours this week',fmtHours(wt.hours),`${fmtHours(wt.ot)} overtime hours`)}</div>
  <div class="grid2">
@@ -202,7 +223,7 @@ function renderHome(){
  ${jp.filter(p=>p.shifts.length).length>1?`<div class="divider"></div><div class="statlabel">This period by job</div>${jp.filter(p=>p.shifts.length).map(p=>`<div class="resultline"><span>${esc(p.job.name)} <span class="sub">· ${fmtHours(p.t.hours)} · ${dateFmt(p.range.start)} – ${dateFmt(p.range.end)}</span></span><strong>${money(p.t.gross)}</strong></div>`).join('')}`:''}
  </section>
  <section class="panel"><div class="panelhead"><h3>Recent shifts</h3>${recent.length?`<button type="button" class="btn sm" data-goto="timecard">View all</button>`:''}</div>
- ${recent.length?`<div>${recent.map(s=>{const p=shiftPay(s);return `<div class="resultline"><div><strong>${dateFmt((s.start||'').slice(0,10))}</strong>${sampleTag(isSampleShift(s))}<div class="sub">${esc(s.job||state.settings.jobName)} · ${fmtHours(p.hours)}</div></div><strong>${money(p.gross)}</strong></div>`}).join('')}</div>`:emptyState('No shifts yet','Clock in or add a past shift, and your pay period fills in here.',`<button type="button" class="btn primary" data-action="newshift">${ic('plus')}Add shift</button><p class="hint">Just looking? <button type="button" class="linkbtn" data-action="sample">Try it with sample data</button></p>`)}
+ ${recent.length?`<div>${recent.map(s=>{const p=shiftPay(s);return `<div class="resultline"><div><strong>${dateFmt((s.start||'').slice(0,10))}</strong>${sampleTag(isSampleShift(s))}<div class="sub">${esc(s.job||state.settings.jobName)} · ${fmtHours(p.hours)}</div></div><strong>${money(p.gross)}</strong></div>`}).join('')}</div>`:emptyState('shifts')}
  <div class="divider"></div><div class="panelhead"><h3>Paycheck forecast</h3><span class="tag warn">Estimate</span></div><div class="bigclock">${money(net.net)}</div><div class="sub">Estimated take-home for this pay period, before any deductions you haven't set up.</div><div class="actions"><button type="button" class="btn" data-goto="pay">See the math</button><button type="button" class="btn" data-goto="paystubs">Check a paystub</button></div>
  </section></div>
  <section class="panel sectiongap"><div class="panelhead"><h3>Quick reminders</h3></div><div class="twocol"><div><strong>Keep records complete</strong><p class="sub">Check for missed clock-outs and breaks before payday.</p></div>${quiet()?`<div><strong>Synced to your account</strong><p class="sub">Your records stay the same on every device you sign in on.</p></div>`:`<div><strong>Back up your data</strong><p class="sub">Your records live only in this browser. Clearing browser data or some device settings can erase them.</p><button type="button" class="btn sm" data-action="saveNow">${ic('save')}Save backup now</button></div>`}</div></section>`;
@@ -210,7 +231,7 @@ function renderHome(){
 function filteredShifts(){const q=search.trim().toLowerCase();return allSorted().filter(s=>{if(tcJob&&(s.job||state.settings.jobName)!==tcJob)return false;if(!q)return true;const hay=[s.job||state.settings.jobName,s.notes,s.start,dateFmt((s.start||'').slice(0,10))].join(' ').toLowerCase();return hay.includes(q)})}
 function shiftTable(){
  const all=state.shifts.length,shifts=filteredShifts(),filt=!!(search.trim()||tcJob);
- if(!all)return emptyState('No shifts recorded','Add a shift by hand or clock in from Home. Hours, overtime and pay are figured for you.',`<button type="button" class="btn primary" data-action="newshift">${ic('plus')}Add shift</button>`);
+ if(!all)return emptyState('shifts');
  if(!shifts.length)return `<div class="empty"><b>No shifts match${search.trim()?` "${esc(search.trim())}"`:''}${tcJob?` for ${esc(tcJob)}`:''}</b><p>Try a different search or show every job.</p><button type="button" class="btn" data-action="clearFilters">Clear filters</button></div>`;
  return `${filt?`<p class="hint">Showing ${shifts.length} of ${all} shifts. <button type="button" class="linkbtn" data-action="clearFilters">Clear filters</button></p>`:''}<div class="tablewrap sectiongap"><table><thead><tr><th scope="col">Date</th><th scope="col">Job</th><th scope="col">Start</th><th scope="col">End</th><th scope="col">Break</th><th scope="col">Hours</th><th scope="col">OT</th><th scope="col" class="right">Gross</th><th scope="col"><span class="sr">Actions</span></th></tr></thead><tbody>${shifts.map(s=>{let p=shiftPay(s);const day=(s.start||'').slice(0,10),dl=dateFmt(day);return `<tr><td>${dl}${sampleTag(isSampleShift(s))}</td><td>${esc(s.job||state.settings.jobName)}</td><td>${timeFmt(s.start)}</td><td>${s.end?timeFmt(s.end,day):'<span class="tag good">Active</span>'}</td><td>${Number(s.unpaidBreak)||0}m</td><td>${fmtHours(p.hours)}</td><td>${fmtHours(p.overtime)}</td><td class="right">${money(p.gross)}</td><td><div class="rowacts"><button type="button" class="btn sm" data-action="editShift" data-id="${esc(s.id)}" aria-label="Edit shift on ${dl}">Edit</button><button type="button" class="btn sm danger" data-action="deleteShift" data-id="${esc(s.id)}" aria-label="Delete shift on ${dl}">Delete</button></div></td></tr>`}).join('')}</tbody></table></div>`;
 }
@@ -220,7 +241,7 @@ function renderTimecard(){
  <div class="cards">${stat('Total recorded',fmtHours(totals(shifts).hours),`${shifts.length} shift entries`)}${stat('This pay period',fmtHours(cur.hours),rangeLabel(jp))}${stat('Regular hours',fmtHours(cur.reg),'Figured by workweek')}${stat('Overtime hours',fmtHours(cur.ot),'Using each job\'s overtime rule')}</div>
  ${edit?`<section class="panel sectiongap subform"><div class="panelhead"><h3 id="shiftFormTitle">${edit.id?'Edit shift':'New shift'}</h3></div>${shiftForm(edit)}</section>`:''}
  <section class="panel sectiongap"><div class="panelhead"><h3>All shifts</h3><div class="actions" style="margin:0">${state.jobs.length>1?`<label class="sr" for="tcJob">Show job</label><select class="fsel" id="tcJob"><option value="">All jobs</option>${state.jobs.map(j=>`<option value="${esc(j.name)}" ${j.name===tcJob?'selected':''}>${esc(j.name)}</option>`).join('')}</select>`:''}</div></div>
- <div class="phone-search"><div class="searchbox">${ic('search')}<input id="searchPhone" type="search" placeholder="Search shifts" aria-label="Search shifts" autocomplete="off" value="${esc(search)}"></div></div>
+ <div class="tc-filter"><div class="searchbox">${ic('search')}<input id="searchPhone" type="search" placeholder="Filter shifts" aria-label="Filter shifts by job, note or date" autocomplete="off" value="${esc(search)}"></div></div>
  <div id="shiftTable">${shiftTable()}</div>
  <p class="hint">Overtime is split by time order within each workweek. Check your employer's workweek and the pay rules that apply to you.</p></section>`;
 }
@@ -248,7 +269,7 @@ function renderPaystubs(){
  <div class="notice">${ic('info')}<div>A difference is a reason to review your hours, pay period, rates and deductions. It isn't proof of an error or a wage violation. Comparing gross pay usually tells you more than comparing estimated net pay with a bank deposit.</div></div>
  ${edit?`<section class="panel sectiongap subform"><div class="panelhead"><h3>${edit.id?'Edit paystub':'Add paystub'}</h3></div>${stubForm(edit)}</section>`:''}
  ${rows.map(stub=>{let range={start:stub.start,end:stub.end},t=totals(periodShifts(range).filter(s=>(s.job||state.settings.jobName)===stub.employer)),diff=Number(stub.actualGross)-t.gross;return `<section class="panel sectiongap"><div class="panelhead"><div><h3>${esc(stub.employer||'Paycheck')} · ${dateFmt(stub.date)}${sampleTag(isSampleStub(stub))}</h3><div class="sub">${dateFmt(stub.start)} – ${dateFmt(stub.end)}</div></div><span class="tag ${Math.abs(diff)<.02?'good':'warn'}">${Math.abs(diff)<.02?'Gross matches':`${diff<0?'Actual lower':'Actual higher'} by ${money(Math.abs(diff))}`}</span></div><div class="cards">${stat('Logged gross',money(t.gross),'From your saved shifts')}${stat('Actual gross',money(stub.actualGross),'Entered from the paystub')}${stat('Gross difference',money(diff),'Actual minus logged estimate')}${stat('Actual net',money(stub.actualNet),'Your deposit may differ from net pay')}</div>${stub.notes?`<p class="sub">${esc(stub.notes)}</p>`:''}<div class="actions"><button type="button" class="btn sm" data-action="editStub" data-id="${esc(stub.id)}">Edit</button><button type="button" class="btn sm danger" data-action="deleteStub" data-id="${esc(stub.id)}">Delete</button></div></section>`}).join('')}
- ${!rows.length&&!edit?`<section class="panel">${emptyState('No paystubs yet','Add the gross and net pay from a real paystub to compare it with your time records.',`<button type="button" class="btn primary" data-action="newstub">${ic('plus')}Add paystub</button>`)}</section>`:''}
+ ${!rows.length&&!edit?`<section class="panel">${emptyState('paystubs')}</section>`:''}
  <section class="panel sectiongap"><h3>Entering paystubs</h3><p class="muted">Type in the figures from your paystub. The app doesn't read PDF paystubs, and it's best not to upload payroll documents to outside converter sites.</p></section>`;
 }
 function stubForm(s={}){return `<form id="stubForm" novalidate><input type="hidden" name="id" value="${esc(s.id||'')}"><div class="fieldgrid">${jobSelect('Job this paycheck is from','employer',s.employer||state.settings.jobName)}${field('Pay date','date',s.date||today(),'date',{required:true})}${field('Period start','start',s.start||periodRange(today(),s.employer).start,'date',{required:true})}${field('Period end','end',s.end||periodRange(today(),s.employer).end,'date',{required:true})}${field('Actual gross pay ($)','actualGross',s.actualGross??0,'number',{step:.01,min:0,required:true})}${field('Actual net pay ($)','actualNet',s.actualNet??0,'number',{step:.01,min:0})}${field('Notes or questions','notes',s.notes||'','textarea',{full:true})}</div><div class="formactions"><button type="button" class="btn" data-action="cancelEdit">Cancel</button><button class="btn primary" type="submit">Save paystub</button></div></form>`}
@@ -267,7 +288,7 @@ function monthChart(year){
  const mName=(i,f)=>new Date(Number(year),i,1).toLocaleDateString('en-US',{month:f});
  const grid=`<div class="mgrid" aria-hidden="true"><i class="mg m0"><em>${moneyShort(0)}</em></i>${ticks.map(v=>`<i class="mg" style="bottom:${pct(v)}%"><em>${moneyShort(v)}</em></i>`).join('')}${worked.length>1?`<i class="mt" style="bottom:${pct(avg)}%"></i>`:''}</div>`;
  const cols=rows.map(r=>{const when=`${mName(r.i,'long')} ${year}`,ctx=r.n?`${hrsWords(r.hours)} hours · ${r.n} shift${r.n===1?'':'s'}`:r.future?'Still to come':'No shifts recorded',val=money(r.gross);
-  return `<button type="button" class="mcol${year===curY&&r.i===curM?' cur':''}" data-tip="${esc(val)}|${esc(when)}|${esc(ctx)}" aria-label="${esc(when)}: ${esc(val)}. ${esc(ctx)}."><span class="mtrack"><span class="mbar" style="height:${pct(r.gross)}%"></span></span><small aria-hidden="true">${mName(r.i,'short')}</small></button>`}).join('');
+  return `<button type="button" class="mcol${year===curY&&r.i===curM?' cur':''}" data-tip="${esc(val)}|${esc(when)}|${esc(ctx)}" aria-label="${esc(when)}: ${esc(val)}. ${esc(ctx)}."><span class="mtrack"><span class="mbar" style="height:${pct(r.gross)}%"></span></span><small aria-hidden="true">${mName(r.i,'short')}<span class="yr"> ’${String(year).slice(2)}</span></small></button>`}).join('');
  const legend=worked.length?`<p class="mlegend">${worked.length>1?`<i aria-hidden="true"></i>Average month ${money(avg)} · `:''}Best month ${mName(best.i,'long')}, ${money(best.gross)}</p>`:`<p class="mlegend">No shifts recorded in ${year} yet.</p>`;
  return `<div class="mchart" role="group" aria-label="Monthly earnings, ${year}">${grid}<div class="mcols">${cols}</div></div>${legend}`}
 /* one label for every chart mark with data-tip="Value|when|context": hover, tap or keyboard focus; Esc, scroll or leaving hides it */
@@ -294,7 +315,7 @@ function renderReports(){
  const lp=lastPeriod();
  return `${viewHead('Reports','Your work history and earnings over time.')}
  <div class="cards">${stat('This month',money(mt.gross),`${fmtHours(mt.hours)} recorded hours`)}${stat('Year to date',money(yt.gross),`${fmtHours(yt.hours)} recorded hours`)}${stat('Total shifts',String(all.length),'All saved entries')}${stat('Paystubs logged',String(state.paystubs.length),'Actual checks recorded')}</div>
- <div class="twocol"><section class="panel"><h3>By job</h3>${Object.keys(byJob).length?Object.entries(byJob).map(([j,x])=>`<div class="resultline"><div><strong>${esc(j)}</strong><div class="sub">${x.shifts} shifts · ${fmtHours(x.hours)}</div></div><strong>${money(x.gross)}</strong></div>`).join(''):emptyState('Nothing to report yet','Your hours and earnings by job show up here once you record shifts.',`<button type="button" class="btn" data-goto="timecard">Go to Timecard</button>`)}</section>
+ <div class="twocol"><section class="panel"><h3>By job</h3>${Object.keys(byJob).length?Object.entries(byJob).map(([j,x])=>`<div class="resultline"><div><strong>${esc(j)}</strong><div class="sub">${x.shifts} shifts · ${fmtHours(x.hours)}</div></div><strong>${money(x.gross)}</strong></div>`).join(''):emptyState('reports')}</section>
  <section class="panel"><div class="panelhead"><h3>Monthly earnings · ${year}</h3><span class="chart-hint">${matchMedia('(hover:none)').matches?'Tap a bar':'Hover or tap a bar'}</span></div>${monthChart(year)}</section></div>
  <section class="panel sectiongap"><div class="panelhead"><h3>Share your progress</h3></div><p class="muted">Make an image of a finished pay period or your year so far. Pay amounts and job names stay off the image unless you turn them on.</p>
  ${lp.shifts.length?`<div class="resultline"><div><strong>Last pay period: ${hrsWords(lp.t.hours)} hours</strong><div class="sub">${dateFmt(lp.range.start)} – ${dateFmt(lp.range.end)} · ${lp.shifts.length} shift${lp.shifts.length===1?'':'s'}</div></div><button type="button" class="btn sm mb-share-btn" data-action="sharePeriod">${ic('share')}Share</button></div>`:''}
@@ -323,22 +344,69 @@ function renderSettings(){
  </div><p class="hint" id="jobAnchorHint">The pay-period date tells the app which two weeks line up with your paychecks. Leave it blank and periods count from your first shift. The payday only shows your next payday; leave it blank to skip it.</p><div class="formactions"><button type="button" class="btn" data-action="cancelJob">Cancel</button><button class="btn primary" type="submit">Save job</button></div></form>`:'';
  const jobs=state.jobs.map(j=>{const n=state.shifts.filter(x=>(x.job||s.jobName)===j.name).length,c=jobCfg(j.name);return `<div class="mb-set-row jobrow"><div class="mb-set-l"><b>${esc(j.name)}${sampleTag(j.sample)} ${j.active?(j.name===s.jobName?'<span class="tag good">Default</span>':''):'<span class="tag">Past job</span>'}</b><small>${money(j.rate)}/hr${Number(j.differential)?` + ${money(j.differential)} differential`:''} · ${FREQ[c.payFrequency]} · OT after ${c.otThreshold}h at ${c.otMultiplier}× · ${n} shift${n===1?'':'s'}</small></div><div class="mb-set-c"><button type="button" class="btn sm" data-action="editJob" data-id="${esc(j.id)}" aria-label="Edit ${esc(j.name)}">Edit</button>${j.active?`<button type="button" class="btn sm" data-action="toggleJob" data-id="${esc(j.id)}">Mark as past job</button>`:`<button type="button" class="btn sm" data-action="toggleJob" data-id="${esc(j.id)}">Reactivate</button>`}${n?'':`<button type="button" class="btn sm danger" data-action="deleteJob" data-id="${esc(j.id)}" aria-label="Delete ${esc(j.name)}">Delete</button>`}</div></div>`}).join('');
  const STATES=['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'];
- return `<div class="mb-set">
+ return `${viewHead('Settings','Changes save as you make them.')}<div class="mb-set">
  ${sec('setA','Appearance',`<div class="mb-set-card">${row('Theme','Light or dark. Saved on this device. The app opens in light unless you pick dark.',`<div class="mb-seg" role="group" aria-label="Theme"><button type="button" data-theme-pick="light" aria-pressed="${theme!=='dark'}">${ic('sun')}Light</button><button type="button" data-theme-pick="dark" aria-pressed="${theme==='dark'}">${ic('moon')}Dark</button></div>`)}</div>`)}
  ${sec('setS','Account &amp; sync',`<div class="mb-set-card pad" id="syncCard">${SYNC?'':'<p class="muted">Sync isn’t available in this browser. Everything still saves on this device.</p>'}</div>`)}
- ${sec('setApp','Payday settings',`<div class="mb-set-card">${row('Jobs, pay rates and pay periods','Each job keeps its own hourly rate, pay schedule and overtime rule. Overtime is counted separately for each job, since each employer tracks its own week.',`<button type="button" class="btn sm" data-action="newJob">${ic('plus')}Add job</button>`)}${jobForm}${jobs}<p class="hint set-hint">Leaving a job? Mark it as past instead of deleting it, so its shifts and paystubs stay in your history.</p></div>`)}
- ${sec('setTax','Take-home estimate',`<form id="settingsForm" class="mb-set-card" novalidate>
+ ${sec('setApp','Payday settings',`<div class="mb-set-card">${row('Jobs, pay rates and pay periods','Each job keeps its own hourly rate, pay schedule and overtime rule. Overtime is counted separately for each job, since each employer tracks its own week.',`<button type="button" class="btn sm" data-action="newJob">${ic('plus')}Add job</button>`)}${jobForm}${jobs}<p class="hint set-hint">Leaving a job? Mark it as past instead of deleting it, so its shifts and paystubs stay in your history.</p></div>
+ <form id="settingsForm" class="mb-set-card" novalidate aria-label="Take-home estimate">
+ <h3 class="set-sub">Take-home estimate</h3>
  ${row('Currency','Used for every amount in the app.',sel('currency',[['USD','USD: US dollar'],['CAD','CAD: Canadian dollar'],['GBP','GBP: British pound'],['EUR','EUR: euro']],s.currency),'currency')}
  ${row('State you pay tax in','For the rough state tax estimate.',sel('state',STATES.map(x=>[x,x]),s.state),'state')}
  ${row('Filing status','For the rough federal withholding estimate.',sel('filing',[['single','Single / other'],['married','Married filing jointly (rough model)']],s.filing),'filing')}
  ${row('Extra withholding','Dollars per paycheck.',num('extraWithholding',s.extraWithholding),'extraWithholding')}
  ${row('Pre-tax deductions','Dollars per paycheck, such as a retirement plan.',num('pretaxDeductions',s.pretaxDeductions),'pretaxDeductions')}
  ${row('Post-tax deductions','Dollars per paycheck.',num('posttaxDeductions',s.posttaxDeductions),'posttaxDeductions')}
- <div class="mb-set-row"><div class="mb-set-l"><small>Tax estimates are simplified and aren't payroll-grade. State withholding varies a lot, and some states and cities need different treatment.</small></div><div class="mb-set-c"><button class="btn primary" type="submit">Save settings</button></div></div>
+ <p class="hint set-hint">Tax estimates are simplified and aren't payroll-grade. State withholding varies a lot, and some states and cities need different treatment.</p>
  </form>`)}
  ${sec('setD','Backup &amp; data',`<div class="mb-set-card" id="setData">${dataListHTML(false)}</div>`)}
- ${sec('setI','Install',`<div data-mb-install data-app-name="Payday" data-note="Opens in its own window with its own icon. Works offline after the first visit."></div><p class="mb-set-card pad inst-fallback">This browser isn’t offering to install Payday right now. In Chrome or Edge, look for Install in the address bar or browser menu. On iPhone or iPad, tap Share, then Add to Home Screen. Once installed, it works offline.</p>`)}
- ${sec('setAb','About',`<div class="mb-about" role="group" aria-label="About this app">${ic('info')}<div><b>payday.mcbflow.com™</b><p>Version ${APP_VERSION} · Oct 16, 2026</p><p class="mb-about-links"><button type="button" data-news>What’s new</button><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="https://mcbflow.com/">More free apps at mcbflow.com</a></p><p class="mb-about-copy">© 2026 Matthew Broyer. All rights reserved.</p></div></div>`)}
+ ${sec('setI','Install',`<div class="mb-set-card pad mb-inst" id="instBox"></div>`)}
+ ${sec('setAb','About',`<div class="mb-about" role="group" aria-label="About this app">${ic('info')}<div><b>payday.mcbflow.com™</b><p>Version ${APP_VERSION} · Oct 17, 2026</p><p class="mb-about-links"><button type="button" data-news>What’s new</button><button type="button" data-goto="help">Help</button><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="https://mcbflow.com/">More free apps at mcbflow.com</a></p><p class="mb-about-copy">© 2026 Matthew Broyer. All rights reserved.</p></div></div>`)}
+ </div>`;
+}
+/* Install section: the same words in every mcbflow.com app (SUITE-STANDARDS §14). MBInstall gives the Install button and the installed state. */
+const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function installRender(){const box=$('#instBox');if(!box)return;const M=window.MBInstall||{};
+ const how=M.isInstalled&&M.isInstalled()?`<p class="mb-inst-done">${ic('shield')}Installed on this device</p>`
+  :M.canInstall&&M.canInstall()?`<button type="button" class="btn primary" data-mb-install-btn>Install</button>`
+  :`<p class="mb-inst-how">${isIOS()?'iPhone/iPad: tap Share, then Add to Home Screen.':'Use your browser’s menu: Install app / Add to Home screen.'}</p>`;
+ box.innerHTML=`<p class="mb-inst-line">Add Payday to your home screen or dock. It opens in its own window and works offline.</p>${how}`}
+addEventListener('beforeinstallprompt',()=>setTimeout(installRender,0));
+addEventListener('appinstalled',()=>setTimeout(installRender,0));
+
+/* ---------------------------------------------------------------- Help (SUITE-STANDARDS §14: intro · Getting started · FAQ by topic) */
+function renderHelp(){
+ const q=(t,a)=>`<details class="hp-q"><summary>${t}</summary><div class="hp-a">${a}</div></details>`;
+ const grp=(id,t,items)=>`<section class="hp-grp" aria-labelledby="${id}"><h3 class="hp-h" id="${id}">${t}</h3><div class="hp-card">${items.join('')}</div></section>`;
+ return `${viewHead('Help','Quick answers about tracking your hours and checking your pay.')}
+ <div class="hp">
+ <section class="hp-start" aria-labelledby="hpStart"><h3 class="hp-h" id="hpStart">Getting started</h3><ol class="hp-steps">
+  <li><b>Set up your job.</b> In Settings → Payday settings, add your hourly rate, how often you’re paid and when overtime starts.</li>
+  <li><b>Clock in and out.</b> Use Clock in in the top bar or on Home when your shift starts, and Clock out when it ends. Missed one? Add it on the Timecard.</li>
+  <li><b>Watch the pay period add up.</b> Home shows your hours, estimated gross pay and a rough take-home for this pay period.</li>
+  <li><b>Check your paycheck.</b> When you get paid, add the paystub in Paycheck check to compare it with your own records.</li>
+  <li><b>Keep a backup.</b> Use Data → Save backup now every so often, or sign in to sync.</li>
+ </ol></section>
+ ${grp('hpShifts','Time clock and shifts',[
+  q('I forgot to clock out. How do I fix it?','Open the Timecard, choose <b>Edit</b> on that shift and set the right end time. If the clock is still running, saving the shift with its end time stops the clock.'),
+  q('How do I record an unpaid break?','Enter the minutes in <b>Unpaid break</b> when you add or edit a shift. They’re taken off the shift’s hours before pay is figured.'),
+  q('Can I track more than one job?','Yes. Add each job in Settings → Payday settings. Each job has its own rate, pay schedule and overtime rule. With more than one job, Home asks which job you’re clocking in to, and each shift has a Job field.'),
+  q('I deleted something by mistake.','Choose <b>Undo</b> in the message that appears right after you delete a shift, paystub or job.')])}
+ ${grp('hpPay','Pay and overtime',[
+  q('How is overtime figured?','Per job and per workweek. Hours past the job’s overtime limit (40 a week unless you change it) are paid at its overtime multiplier (1.5× unless you change it), counted in time order. Set the day your workweek starts for each job in Settings.'),
+  q('How do pay periods work?','Each job is paid weekly, every two weeks, twice a month (1st–15th and 16th–end) or monthly. For every two weeks, enter the first day of a pay period so the periods line up with your paychecks; left blank, they count from your first shift. Add a recent payday to see your next payday.'),
+  q('How accurate is the take-home estimate?','It’s a rough planning figure: simplified federal tax brackets, a simple state rate, Social Security and Medicare, and the deductions you enter under Take-home estimate in Settings. Your real paycheck can differ. It isn’t payroll, tax or legal advice.'),
+  q('What’s a shift differential?','Extra pay per hour on top of your rate, for example for night shifts. Set it for a job in Settings, or for one shift in the shift form.')])}
+ ${grp('hpChecks','Paychecks and reports',[
+  q('What does Paycheck check compare?','The gross pay you type in from a paystub with the gross pay figured from your shifts for that job and pay period. A difference is a reason to look at your hours, rates and deductions, not proof of an error.'),
+  q('Can Payday read a PDF paystub?','No. Type in the figures from your paystub. It’s best not to upload payroll documents to outside converter sites.'),
+  q('Can I share my hours?','Reports → Share your progress makes a picture of your last pay period or your year so far. Pay amounts and job names stay off the picture unless you turn them on.'),
+  q('Keyboard shortcuts','<b>/</b> or <b>Ctrl+K</b> opens Search, <b>Ctrl+S</b> saves a backup and <b>Esc</b> closes a dialog or menu.')])}
+ ${grp('hpInstall','Install the app',[
+  q('Can I use Payday like a regular app?','Yes. Settings → Install shows how to add it to your home screen or dock. It opens in its own window and works offline after the first visit.')])}
+ ${grp('hpData','Your data &amp; privacy',[
+  q('Where are my records kept?','In this browser on this device. No account is needed, and unless you sign in to sync, nothing is sent anywhere. Clearing your browser data deletes your records, so save a backup now and then (Data → Save backup now).'),
+  q('How do I move to a new phone or computer?','Use Data → Export All (JSON) here and Data → Import Backup on the other device. Or sign in to sync on both; your records stay the same on every device you sign in on. Sample records never sync.'),
+  q('Who can see my data?',`Only you. Read the <a href="privacy.html">Privacy</a> page and the <a href="terms.html">Terms</a> for the details.`)])}
  </div>`;
 }
 
@@ -353,7 +421,9 @@ function bindPage(){
   setTimeout(()=>{if(sf.isConnected){sf.scrollIntoView({block:'start'});sf.start.focus({preventScroll:true})}},20)}
  const stf=$('#stubForm');if(stf){markDirty(stf);stf.onsubmit=e=>{e.preventDefault();if(!stf.reportValidity())return;const f=new FormData(stf),id=f.get('id')||uid(),prev=state.paystubs.find(x=>x.id===id),obj={id,employer:f.get('employer'),date:f.get('date'),start:f.get('start'),end:f.get('end'),actualGross:Number(f.get('actualGross'))||0,actualNet:Number(f.get('actualNet'))||0,notes:f.get('notes')||''};if(prev&&prev.sample)obj.sample=true;let i=state.paystubs.findIndex(x=>x.id===id);if(i>=0)state.paystubs[i]=obj;else state.paystubs.push(obj);editingId=null;save();render();notify('Paystub saved')};
   setTimeout(()=>{if(stf.isConnected){stf.scrollIntoView({block:'start'});stf.employer.focus({preventScroll:true})}},20)}
- const setf=$('#settingsForm');if(setf){markDirty(setf);setf.onsubmit=e=>{e.preventDefault();const f=new FormData(setf);for(const k of ['extraWithholding','pretaxDeductions','posttaxDeductions'])state.settings[k]=Number(f.get(k))||0;for(const k of ['state','filing','currency'])state.settings[k]=f.get(k);save();render();notify('Settings saved')}}
+ const setf=$('#settingsForm');if(setf){setf.onsubmit=e=>e.preventDefault();setf.addEventListener('change',e=>{const el=e.target,k=el.name;if(!k)return;   // Settings save as you change them
+  if(['extraWithholding','pretaxDeductions','posttaxDeductions'].includes(k))state.settings[k]=Math.max(0,Number(el.value)||0);else if(['state','filing','currency'].includes(k))state.settings[k]=el.value;else return;
+  save();if(k==='currency'){render();const c=$('#currency');if(c)c.focus({preventScroll:true})}})}
  const jf=$('#jobForm');if(jf){markDirty(jf);const nameIn=$('#jobName'),showErr=m=>{nameIn.setAttribute('aria-invalid',String(!!m));const er=$('#jobNameErr');er.textContent=m||'';er.hidden=!m;if(m)nameIn.focus()};
   jf.onsubmit=e=>{e.preventDefault();const f=new FormData(jf),id=f.get('id'),name=String(f.get('jobName')||'').trim(),rate=Number(f.get('jobRate'))||0,differential=Number(f.get('jobDiff'))||0,sched={payFrequency:f.get('jobFreq'),weekStarts:Number(f.get('jobWeek'))||0,payday:f.get('jobPayday')||'',anchor:f.get('jobFreq')==='biweekly'?(f.get('jobAnchor')||''):'',otThreshold:f.get('jobOt')===''?40:Number(f.get('jobOt')),otMultiplier:Math.max(1,Number(f.get('jobOtMult'))||1.5)},makeDef=!!f.get('jobDefault');if(!name){showErr('Give the job a name.');return}if(state.jobs.some(j=>j.name===name&&j.id!==id)){showErr('You already have a job with that name.');return}
   const existing=state.jobs.find(j=>j.id===id);
@@ -366,24 +436,24 @@ function bindPage(){
  const sj=$('#shiftForm [name=job]');if(sj)sj.onchange=()=>{const j=jobByName(sj.value);if(j){$('#shiftForm [name=rate]').value=j.rate;$('#shiftForm [name=differential]').value=j.differential||0}};
  const wf=$('#whatifForm');if(wf)wf.onsubmit=e=>{e.preventDefault();const f=new FormData(wf),rate=Number(f.get('whatRate'))||0,reg=Number(f.get('extraHours'))||0,ot=Number(f.get('extraOT'))||0,gross=reg*rate+ot*rate*(Number(f.get('whatMult'))||1.5),net=estimateNet(gross);$('#whatifResult').innerHTML=`<div class="callout">This adds <strong>${money(gross)}</strong> gross, with a rough estimated take-home of <strong>${money(net.net)}</strong>. The take-home figure is approximate, not a payroll quote.</div>`};
  const tj=$('#tcJob');if(tj)tj.onchange=()=>{tcJob=tj.value;lsSet(K_TC,JSON.stringify({job:tcJob}));refreshShiftTable()};
- const sp=$('#searchPhone');if(sp)sp.oninput=()=>{search=sp.value;$('#search').value=search;refreshShiftTable()};
+ const sp=$('#searchPhone');if(sp)sp.oninput=()=>{search=sp.value;refreshShiftTable()};
  const sd=$('#setData');if(sd)sd.addEventListener('click',dmClick);
 }
-function refreshShiftTable(){const box=$('#shiftTable');if(!box)return;box.innerHTML=shiftTable();$$('[data-art]',box).forEach(el=>{const t=document.getElementById(el.dataset.art);if(t)el.replaceWith(t.content.firstElementChild.cloneNode(true))});$$('[data-action]',box).forEach(b=>b.onclick=()=>action(b.dataset.action,b.dataset.id,b))}
+function refreshShiftTable(){const box=$('#shiftTable');if(!box)return;box.innerHTML=shiftTable();fillEmpties(box);$$('[data-action]',box).forEach(b=>b.onclick=()=>action(b.dataset.action,b.dataset.id,b))}
 
 async function action(a,id,btn){
  if(a==='clock'){toggleClock();return}
- if(a==='sample'){loadSampleData();return}
- if(a==='removeSample'){removeSampleData();return}
  if(a==='saveNow'){saveNow();return}
- if(a==='clearFilters'){search='';tcJob='';$('#search').value='';const sp=$('#searchPhone');if(sp)sp.value='';const tj=$('#tcJob');if(tj)tj.value='';lsSet(K_TC,'{}');refreshShiftTable();return}
+ if(a==='clearFilters'){search='';tcJob='';const sp=$('#searchPhone');if(sp)sp.value='';const tj=$('#tcJob');if(tj)tj.value='';lsSet(K_TC,'{}');refreshShiftTable();return}
  if(a==='sharePeriod'){sharePeriod();return}
  if(a==='shareYear'){shareYear();return}
  if(a==='newJob'){if(!(await guardLeave()))return;editingJobId='new';render();return}
  if(a==='editJob'){if(!(await guardLeave()))return;editingJobId=id;render();return}
  if(a==='cancelJob'){editingJobId=null;render();return}
  if(a==='toggleJob'){const j=state.jobs.find(x=>x.id===id);if(!j)return;if(j.active&&activeJobs().length===1){notify('Add your new job first, then mark this one as past.');return}if(j.active&&state.activeShift?.job===j.name){notify('Clock out of this job first.');return}j.active=!j.active;if(!j.active&&state.settings.jobName===j.name)state.settings.jobName=activeJobs()[0].name;syncDefaultJob();save();render();notify(j.active?'Job reactivated':'Marked as past job. History kept.');return}
- if(a==='deleteJob'){const j=state.jobs.find(x=>x.id===id);if(!j)return;if(j.active&&activeJobs().length===1){notify('You need at least one active job.');return}if(await askConfirm({title:`Delete "${j.name}"?`,body:'This job has no shifts. Its name, rate and pay schedule will be deleted.',ok:'Delete job'})){state.jobs=state.jobs.filter(x=>x.id!==id);ensureJobs();syncDefaultJob();save();render();notify('Job deleted')}return}
+ if(a==='deleteJob'){const j=state.jobs.find(x=>x.id===id);if(!j)return;if(j.active&&activeJobs().length===1){notify('You need at least one active job.');return}
+  const at=state.jobs.indexOf(j),def={jobName:state.settings.jobName,hourlyRate:state.settings.hourlyRate,shiftDiff:state.settings.shiftDiff};if(editingJobId===id)editingJobId=null;state.jobs=state.jobs.filter(x=>x.id!==id);ensureJobs();syncDefaultJob();save();render();
+  toast('Job deleted',()=>{if(!jobByName(j.name))state.jobs.splice(Math.min(at,state.jobs.length),0,j);if(def.jobName===j.name)Object.assign(state.settings,def);ensureJobs();syncDefaultJob();save();render();notify('Job restored')});return}
  if(a==='newshift'){if(page!=='timecard'||editingId){if(!(await guardLeave()))return}editingId='new';page='timecard';render();return}
  if(a==='cancelEdit'){editingId=null;render();return}
  if(a==='editShift'){if(!(await guardLeave()))return;editingId=id;page='timecard';render();return}
@@ -411,7 +481,7 @@ function loadSampleData(){
  const sj=jobByName(SAMPLE_JOB);if(sj){sj.sample=true;sj.rate=22.5;sj.differential=0.75;state.settings.jobName=SAMPLE_JOB;syncDefaultJob()}
  const gross=totals(examples).gross;
  state.paystubs.push({id:uid(),employer:SAMPLE_JOB,date:today(),start:ymd(start),end:today(),actualGross:Math.round((gross+12.5)*100)/100,actualNet:Math.round(gross*.78*100)/100,notes:`${SAMPLE_NOTE}. A small gross difference is included on purpose to show the comparison.`,sample:true});
- save();page='home';editingId=null;render();notify('Sample data added. Remove it any time from the Data menu.');
+ save();page='home';editingId=null;render();notify('Sample data added');
 }
 function removeSampleData(){
  if(!hasSample())return;
@@ -454,18 +524,23 @@ async function handleSet(h){try{const db=await idb();await new Promise(res=>{con
 async function handleClear(){try{const db=await idb();await new Promise(res=>{const tx=db.transaction('handles','readwrite');tx.objectStore('handles').clear();tx.oncomplete=res;tx.onerror=res})}catch(e){}lsDel(K_FILE)}
 async function writeHandle(h){if(h.queryPermission&&(await h.queryPermission({mode:'readwrite'}))!=='granted'){if((await h.requestPermission({mode:'readwrite'}))!=='granted')throw new Error('permission')}const w=await h.createWritable();await w.write(backupBlob());await w.close()}
 async function pickAndSave(){const h=await window.showSaveFilePicker({suggestedName:'payday-backup.json',types:[{description:'payday.mcbflow.com backup',accept:{'application/json':['.json']}}]});await writeHandle(h);await handleSet(h);markBackedUp(h.name);return h.name}
+/* export names (SUITE-STANDARDS §14): payday-backup-YYYY-MM-DD.json|zip, payday-shifts-YYYY-MM-DD.csv, payday-paystubs-YYYY-MM-DD.csv;
+   the rolling "Save backup now" file is payday-backup.json. Empty exports always work; the message says what was saved. */
+const fname=(kind,ext)=>MBUI.fileName('payday',kind,ext);
+const emptyNote=()=>hasData()?'':' (jobs and settings; no shifts yet)';
+function downloadBackup(){const n=fname('backup','json');download(n,backupBlob());markBackedUp('');notify(`Backup downloaded · ${n}${emptyNote()}`)}
 async function saveNow(){
  closeMenu();
- if(!hasData()&&!(await askConfirm({title:'Save an empty backup?',body:'There are no shifts or paystubs yet, so the backup will only hold your jobs and settings.',ok:'Save anyway',danger:false})))return;
- if(!fsOK()){download(`payday-backup-${today()}.json`,backupBlob());markBackedUp('');notify('Backup saved to your Downloads folder');return}
- try{const h=await handleGet();if(h){await writeHandle(h);markBackedUp(h.name);notify(`Backup saved to ${h.name}`);return}const n=await pickAndSave();notify(`Backup saved to ${n}. Save backup now will update this file.`)}
- catch(e){if(e&&e.name==='AbortError')return;download(`payday-backup-${today()}.json`,backupBlob());markBackedUp('');notify('Backup saved to your Downloads folder')}
+ if(!fsOK()){downloadBackup();return}
+ try{const h=await handleGet();if(h){await writeHandle(h);markBackedUp(h.name);notify(`Backup saved · ${h.name}${emptyNote()}`);return}const n=await pickAndSave();notify(`Backup saved · ${n}. Save backup now will update this file.`)}
+ catch(e){if(e&&e.name==='AbortError')return;downloadBackup()}
 }
-async function exportJSON(){closeMenu();if(fsOK()){try{const n=await pickAndSave();notify(`Backup saved to ${n}`);return}catch(e){if(e&&e.name==='AbortError')return}}download(`payday-backup-${today()}.json`,backupBlob());markBackedUp('');notify('JSON backup exported')}
-function exportPageCSV(){closeMenu();if(page==='paystubs'){download(`payday-paystubs-${today()}.csv`,new Blob([toCSV(STUB_COLS,state.paystubs)],{type:'text/csv;charset=utf-8'}));notify('Paystubs CSV exported');return}
- const rows=page==='timecard'?filteredShifts().slice().reverse():state.shifts;download(`payday-shifts-${today()}.csv`,new Blob([toCSV(SHIFT_COLS,rows)],{type:'text/csv;charset=utf-8'}));notify('Shifts CSV exported')}
-function exportCSV(){closeMenu();download(`payday-shifts-${today()}.csv`,new Blob([toCSV(SHIFT_COLS,state.shifts)],{type:'text/csv;charset=utf-8'}));notify('Shifts CSV exported')}
-async function exportZIP(){closeMenu();if(!window.JSZip){notify('ZIP export isn\'t available in this browser. Use Export All (JSON) instead.');return}try{const zip=new JSZip();zip.file('payday-backup.json',JSON.stringify(backupPayload(),null,2));zip.file('shifts.csv',toCSV(SHIFT_COLS,state.shifts));zip.file('paystubs.csv',toCSV(STUB_COLS,state.paystubs));zip.file('README.txt','Payday (payday.mcbflow.com) backup. payday-backup.json holds all app data and can be imported with Data > Import Backup (the whole .zip can be imported too). shifts.csv and paystubs.csv are for spreadsheets. Keep this file private.');const blob=await zip.generateAsync({type:'blob'});download(`payday-backup-${today()}.zip`,blob);markBackedUp('');notify('ZIP backup exported')}catch(e){notify('ZIP export failed. Try Export All (JSON) instead.')}}
+async function exportJSON(){closeMenu();if(fsOK()){try{const n=await pickAndSave();notify(`Backup saved · ${n}${emptyNote()}`);return}catch(e){if(e&&e.name==='AbortError')return}}downloadBackup()}
+function csvOut(kind,cols,rows,what){const n=fname(kind,'csv');download(n,new Blob([toCSV(cols,rows)],{type:'text/csv;charset=utf-8'}));notify(`${what} CSV downloaded · ${n}${rows.length?'':` (no ${kind} yet)`}`)}
+function exportPageCSV(){closeMenu();if(page==='paystubs'){csvOut('paystubs',STUB_COLS,state.paystubs,'Paystubs');return}
+ csvOut('shifts',SHIFT_COLS,page==='timecard'?filteredShifts().slice().reverse():state.shifts,'Shifts')}
+function exportCSV(){closeMenu();csvOut('shifts',SHIFT_COLS,state.shifts,'Shifts')}
+async function exportZIP(){closeMenu();if(!window.JSZip){notify('ZIP export isn\'t available in this browser. Use Export All (JSON) instead.');return}try{const zip=new JSZip();zip.file('payday-backup.json',JSON.stringify(backupPayload(),null,2));zip.file('shifts.csv',toCSV(SHIFT_COLS,state.shifts));zip.file('paystubs.csv',toCSV(STUB_COLS,state.paystubs));zip.file('README.txt','Payday (payday.mcbflow.com) backup. payday-backup.json holds all app data and can be imported with Data > Import Backup (the whole .zip can be imported too). shifts.csv and paystubs.csv are for spreadsheets. Keep this file private.');const blob=await zip.generateAsync({type:'blob'}),n=fname('backup','zip');download(n,blob);markBackedUp('');notify(`ZIP backup downloaded · ${n}${emptyNote()}`)}catch(e){notify('ZIP export failed. Try Export All (JSON) instead.')}}
 
 /* ---------------------------------------------------------------- files: import (validate first, then Merge or Replace) */
 function parseCSV(text){let rows=[],row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){let c=text[i];if(quoted){if(c==='"'&&text[i+1]==='"'){cell+='"';i++}else if(c==='"')quoted=false;else cell+=c}else if(c==='"')quoted=true;else if(c===','){row.push(cell);cell=''}else if(c==='\n'){row.push(cell.replace(/\r$/,''));rows.push(row);row=[];cell=''}else cell+=c}if(cell.length||row.length){row.push(cell.replace(/\r$/,''));rows.push(row)}if(rows.length<2)return [];const headers=rows.shift().map(x=>x.replace(/^﻿/,'').trim());return rows.filter(r=>r.some(x=>x!=='')).map(r=>Object.fromEntries(headers.map((h,i)=>[h,r[i]??''])))}
@@ -527,8 +602,11 @@ function finishImport(mode){
 
 /* ---------------------------------------------------------------- clear all data */
 async function clearAll(){closeMenu();
- const synced=SYNC&&SYNC.status().signedIn;
- const ok=await askConfirm({title:'Clear all data?',body:`This deletes all ${state.shifts.length} shift${state.shifts.length===1?'':'s'}, ${state.paystubs.length} paystub${state.paystubs.length===1?'':'s'}, your jobs and settings from this browser.${synced?' You’re signed in to sync, so they’re also deleted from your account and your other devices. To clear only this device, sign out first (Data → Sync).':''} It can't be undone.`,ok:'Clear all data',backup:hasData()});
+ const synced=!!(SYNC&&SYNC.status().signedIn);   // the shared "type DELETE" dialog, same in every mcbflow.com app
+ const ok=await MBFiles.confirmClear({what:`all ${state.shifts.length} shift${state.shifts.length===1?'':'s'}, ${state.paystubs.length} paystub${state.paystubs.length===1?'':'s'}, your jobs and settings`,
+  synced:synced?'You’re signed in, so the synced copy on your account is deleted too.':'',
+  note:synced?'To clear only this device, sign out first (Data → Sync).':'',
+  onBackup:hasData()?async()=>{const t0=lsGet(K_LAST);await saveNow();if(lsGet(K_LAST)===t0)throw new Error('backup not saved')}:undefined});
  if(!ok)return;state=defaultState();ensureJobs();save();lsDel(K_LAST);lsDel(K_TC);await handleClear();search='';tcJob='';editingId=null;editingJobId=null;page='home';render();notify('All data cleared')}
 
 /* ---------------------------------------------------------------- backup status: bar chip, Data menu and Settings list
@@ -554,16 +632,16 @@ function updateBackupUI(){
  setAll('[data-act="exportPageCsv"]',e=>e.hidden=!['timecard','paystubs'].includes(page));
  setAll('[data-dm="exportPageCsvS"]',e=>e.textContent=page==='paystubs'?'Just the paystubs on this page. Best for sharing one view.':'Just the shifts on this page. Best for sharing one view.');
 }
-async function changeLocation(){try{const n=await pickAndSave();notify(`Backup saved to ${n}`)}catch(e){}}
+async function changeLocation(){try{const n=await pickAndSave();notify(`Backup saved · ${n}`)}catch(e){}}
 
 /* ---------------------------------------------------------------- share cards (MBShare, kit v3 §6) */
 const shareMonth=()=>new Date().toLocaleDateString('en-US',{month:'short',year:'numeric'});
 function sharePeriod(){const lp=lastPeriod();if(!lp.shifts.length)return;const range=`${dateFmt(lp.range.start)} – ${dateFmt(lp.range.end)}`;
- MBShare.open({title:'Share your pay period',kicker:'Pay period wrapped up',headline:`${hrsWords(lp.t.hours)} hours worked`,fileName:'payday-pay-period.png',date:shareMonth(),art:$('#shareArt').content.firstElementChild,
+ MBShare.open({title:'Share your pay period',kicker:'Pay period wrapped up',headline:`${hrsWords(lp.t.hours)} hours worked`,fileName:MBUI.fileName('payday','pay-period','png'),date:shareMonth(),art:$('#shareArt').content.firstElementChild,
   options:[{id:'amounts',label:'Show pay amounts',value:false},{id:'job',label:'Show job name',value:false}],
   build:o=>({sub:o.job?`${lp.name} · ${range}`:range,stats:[{label:'Shifts',value:String(lp.shifts.length)},{label:'Overtime',value:`${hrsWords(lp.t.ot)} h`}].concat(o.amounts?[{label:'Est. gross',value:money(lp.t.gross)}]:[{label:'Regular',value:`${hrsWords(lp.t.reg)} h`}])})})}
 function shareYear(){const year=today().slice(0,4),list=state.shifts.filter(s=>(s.start||'').slice(0,4)===year),t=totals(list);if(!list.length)return;const jobs=[...new Set(list.map(s=>s.job||state.settings.jobName))];
- MBShare.open({title:'Share your year so far',kicker:`${year} so far`,headline:`${hrsWords(t.hours)} hours worked this year`,fileName:'payday-year.png',date:shareMonth(),art:$('#shareArt').content.firstElementChild,
+ MBShare.open({title:'Share your year so far',kicker:`${year} so far`,headline:`${hrsWords(t.hours)} hours worked this year`,fileName:MBUI.fileName('payday','year','png'),date:shareMonth(),art:$('#shareArt').content.firstElementChild,
   options:[{id:'amounts',label:'Show pay amounts',value:false},{id:'job',label:'Show job names',value:false}],
   build:o=>({sub:o.job?jobs.join(', '):`${list.length} shifts logged`,stats:[{label:'Shifts',value:String(list.length)},{label:'Overtime',value:`${hrsWords(t.ot)} h`}].concat(o.amounts?[{label:'Est. gross',value:money(t.gross)}]:[])})})}
 
@@ -629,25 +707,38 @@ $('#importReplace').onclick=()=>{closeDlg($('#importDlg'));finishImport('replace
 $('#importCancel').onclick=()=>{pending=null;closeDlg($('#importDlg'))};
 $('#importDlg').addEventListener('cancel',()=>{pending=null});
 $('#importBackup').onclick=()=>saveNow();
-$('#search').oninput=()=>{search=$('#search').value;const sp=$('#searchPhone');if(sp)sp.value=search;refreshShiftTable()};
+const openNews=()=>MBUI.whatsNew({app:'Payday',releases:RELEASES});
 document.addEventListener('click',e=>{
- if(e.target.closest('[data-news]')){e.preventDefault();openDlg($('#newsDlg'));return}
- const v=e.target.closest('[data-view]');if(v&&!v.closest('#view')){e.preventDefault();const md=$('#moreSheet');if(md.open)md.close();go(v.dataset.view);return}
+ if(e.target.closest('[data-news]')){e.preventDefault();openNews();return}
+ const v=e.target.closest('[data-view]');if(v&&!v.closest('#view')){e.preventDefault();go(v.dataset.view);return}
  const h=e.target.closest('[data-home]');if(h){e.preventDefault();go('home',{force:page==='home'})}
 });
-$('#moreBtn').onclick=()=>{const d=$('#moreSheet');$$('#moreSheet [data-view]').forEach(b=>{if(b.dataset.view===page)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});openDlg(d)};
-$$('dialog.dlg [data-close]').forEach(b=>b.onclick=()=>closeDlg(b.closest('dialog')));
-$$('dialog.dlg').forEach(d=>d.addEventListener('click',e=>{if(e.target===d&&(d.id==='moreSheet'||d.id==='newsDlg'))closeDlg(d)}));
+/* phone More menu (shared MBUI.sheet): Settings, Reports, Help, What's new */
+const svgI=id=>`<svg class="uic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-${id}"/></svg>`;
+$('#moreBtn').onclick=()=>MBUI.sheet({title:'More',opener:$('#moreBtn'),items:[
+ ...[['settings','settings'],['reports','chart'],['help','help']].map(([v,i])=>({label:VIEWS[v],icon:svgI(i),current:page===v,onClick:()=>go(v)})),
+ {label:'What’s new',sub:`Version ${APP_VERSION}`,icon:svgI('gift'),onClick:openNews}]});
+/* Search (shared MBUI.search): shifts, paystubs and jobs first, then pages. "/" and Ctrl/Cmd+K are bound by mb-ui.js. */
+function openStub(id){return(async()=>{if(!(await guardLeave()))return;editingId=id;page='paystubs';render();window.scrollTo(0,0)})()}
+function openJob(id){return(async()=>{if(!(await guardLeave()))return;editingJobId=id;editingId=null;page='settings';render()})()}
+function searchRun(raw){const q=raw.toLowerCase(),has=(...p)=>p.join(' ').toLowerCase().includes(q),out=[];
+ for(const s of allSorted()){const day=(s.start||'').slice(0,10),job=s.job||state.settings.jobName;if(!has(job,s.notes,day,dateFmt(day)))continue;const p=shiftPay(s);
+  out.push({title:`${dateFmt(day)} · ${job}`,sub:`${timeFmt(s.start)} – ${s.end?timeFmt(s.end,day):'now'} · ${fmtHours(p.hours)} · ${money(p.gross)}${s.notes?' · '+s.notes:''}`,tag:isSampleShift(s)?'Sample shift':'Shift',onSelect:()=>action('editShift',s.id)})}
+ for(const p of state.paystubs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''))){if(!has(p.employer,p.notes,p.date,dateFmt(p.date)))continue;
+  out.push({title:`${p.employer||'Paycheck'} · paid ${dateFmt(p.date)}`,sub:`Gross ${money(p.actualGross)} · net ${money(p.actualNet)}`,tag:isSampleStub(p)?'Sample paystub':'Paystub',onSelect:()=>openStub(p.id)})}
+ for(const j of state.jobs){if(!has(j.name))continue;const c=jobCfg(j.name);out.push({title:j.name,sub:`${money(j.rate)}/hr · ${FREQ[c.payFrequency]}${j.active?'':' · past job'}`,tag:'Job',onSelect:()=>openJob(j.id)})}
+ for(const [v,l] of Object.entries(VIEWS))if(l.toLowerCase().includes(q))out.push({title:l,sub:'Go to this page',tag:'Page',onSelect:()=>go(v)});
+ return out}
+MBUI.search.setup({placeholder:'Search shifts, paystubs and jobs…',run:searchRun});
+$('#searchBtn').onclick=()=>MBUI.search.open('',$('#searchBtn'));
 document.addEventListener('keydown',e=>{
  if((e.ctrlKey||e.metaKey)&&!e.altKey&&e.key.toLowerCase()==='s'){e.preventDefault();if(W.hidden)saveNow();return}
  if(e.key==='Escape'&&!$('#dataMenu').hidden){e.preventDefault();closeMenu(true);return}
- if(!W.hidden)return;   // the welcome screen handles its own keys
- if(e.key==='/'&&page==='timecard'&&!/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName||'')&&!document.querySelector('dialog[open]')){e.preventDefault();const t=window.innerWidth<768?$('#searchPhone'):$('#search');if(t)t.focus()}
 });
 /* ---------------------------------------------------------------- first-run screen (MB Suite v3.3 .mbw)
    Welcome · Pick a look · Your job and pay · Ready (sample data, Sign in to sync, Import a backup).
    Shown once per browser; Skip, Esc or finishing set 'payday.welcomed'. Esc = Skip; Tab stays inside. */
-let wAt=0,wPrev=null,wInit=null;
+let wAt=0,wPrev=null,wInit=null,wStart='empty';
 function wAcct(){const box=$('#mbwAcct');if(!SYNC){box.innerHTML='';return}const s=SYNC.status();box.innerHTML=s.signedIn?'<span class="mbw-signed">Signed in</span>':'<button class="mbw-link acc" type="button" id="mbwIn">Sign in</button>';const b=$('#mbwIn');if(b)b.onclick=()=>SYNC.open()}
 function wJobFill(){if(wInit)return;const j=jobByName(state.settings.jobName)||state.jobs[0],c=jobCfg(j.name);wInit={name:j.name,rate:String(j.rate),freq:c.payFrequency,ot:String(c.otThreshold)};$('#wJob').value=wInit.name;$('#wRate').value=wInit.rate;$('#wFreq').value=wInit.freq;$('#wOt').value=wInit.ot}
 // Applies only what the person changed, so records that arrived from sync meanwhile aren't overwritten.
@@ -665,10 +756,10 @@ function wPaint(i){wAt=i;$$('.mbw-body',W).forEach(b=>b.hidden=Number(b.dataset.
  wAcct();if(i===2)wJobFill();if(i===3)wSummary();$('.mbw-body:not([hidden])',W).scrollTop=0}
 function wOpen(){wPrev=document.activeElement;W.hidden=false;wPaint(0);$('#mbwNext').focus()}
 function wClose(){lsSet(K_WELCOME,'1');if(W.hidden)return;W.hidden=true;const f=wPrev&&document.contains(wPrev)&&wPrev!==document.body?wPrev:$('#main');try{f.focus({preventScroll:true})}catch(e){}}
-$('#mbwNext').onclick=()=>{if(wAt===2)wJobApply();if(wAt<WN-1){wPaint(wAt+1);$('#mbwNext').focus()}else wClose()};
+$('#mbwNext').onclick=()=>{if(wAt===2)wJobApply();if(wAt<WN-1){wPaint(wAt+1);$('#mbwNext').focus()}else{wClose();if(wStart==='sample')loadSampleData()}};
 $('#mbwBack').onclick=()=>{wPaint(Math.max(0,wAt-1));($('#mbwBack').hidden?$('#mbwNext'):$('#mbwBack')).focus()};
 $('#mbwSkip').onclick=()=>wClose();
-$('#mbwSample').onclick=()=>{wClose();loadSampleData()};
+$$('[data-start]',W).forEach(b=>b.onclick=()=>{wStart=b.dataset.start;$$('[data-start]',W).forEach(x=>x.setAttribute('aria-pressed',String(x===b)))});
 $('#mbwImport').onclick=()=>{wClose();$('#importFile').click()};
 {const sb=$('#mbwSync');if(SYNC)sb.onclick=()=>SYNC.open();else sb.hidden=true}
 $$('[data-theme-pick]',W).forEach(b=>b.onclick=()=>applyTheme(b.dataset.themePick));

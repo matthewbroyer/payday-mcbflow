@@ -31,17 +31,16 @@
   .view-head h2{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto;white-space:normal}
   /* keep the h1 for screen readers instead of display:none */
   .page-bar .page-title{display:block;position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0)}
-  .phone-search{display:block;margin:0 0 12px}
 }
-@media (min-width:768px){.phone-search{display:none}}
-.phone-search .searchbox input{width:100%;height:var(--ctl)}
+/* Timecard filter box (the top bar's Search finds everything; this narrows the shift table) */
+.tc-filter{max-width:360px;margin:0 0 12px}
+.tc-filter .searchbox input{height:var(--ctl)}
+@media (max-width:767px){.tc-filter{max-width:none}}
 .store-banner{margin-left:max(var(--gutter),calc((100% - var(--page-max)) / 2 + var(--gutter)));margin-right:max(var(--gutter),calc((100% - var(--page-max)) / 2 + var(--gutter)))}
 
 /* =====================================================================
    v3.3 (2026-10-16) · Payday pieces next to the shared top-bar/welcome/Data/Settings/footer rules (mb-suite-topbar.css 3.3.0)
    ===================================================================== */
-/* search box in the bar: same height as every other bar control */
-.page-bar .actions .searchbox input{height:var(--tb-h);box-sizing:border-box}
 .page-bar .actions .bk-chip{height:var(--tb-h)}
 /* Data menu: anchored under the Data button on desktop (phones get the shared bottom sheet) */
 .menu-wrap>.mb-dm{position:absolute;right:0;top:calc(100% + 6px)}
@@ -61,9 +60,6 @@
 .mb-set-sec .mb-install,.mb-set-sec .mb-about{margin-top:0}
 .mb-about .mb-about-links button{font-size:inherit}
 @media (max-width:767px){.mb-set-c .fsel,.mb-set-c .fsel.num{width:100%;min-width:0}}
-/* What's new dialog */
-.news-list{margin:0 0 12px;padding-left:20px;font-size:13.5px;color:var(--ink)}
-.news-list li{margin:4px 0}
 .chart-hint{font-size:12px;color:var(--muted)}
 
 /* ---- monthly earnings chart (SUITE-STANDARDS §2 "Charts") ---- */
@@ -92,6 +88,37 @@
 .ctip span{color:var(--muted)}
 @media (max-width:420px){.mchart{padding-left:40px}.mgrid{left:40px}.mcols{gap:1px}.mcol small{font-size:9.5px}}
 @media (prefers-reduced-motion:reduce){.mbar{transition:none}}
-/* Install section: when the browser offers no install (MBInstall hides its box), say how instead of leaving the heading empty */
-.inst-fallback{display:none;margin:0;font-size:13px;color:var(--ink-2)}
-[data-mb-install][hidden] + .inst-fallback{display:block}
+/* Install section (same words in every app): one line, then the Install button, the how-to line or "Installed" */
+.mb-inst{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.mb-inst p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.mb-inst .mb-inst-line{color:var(--ink)}
+.mb-inst-done{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--good-ink)!important}
+/* Settings: the take-home estimate sits under Payday settings as its own card */
+.mb-set-card .set-sub{margin:0;padding:14px 0 4px;font-size:14px;font-weight:650;color:var(--ink)}
+#settingsForm .set-hint{border-top:1px solid var(--border)}
+/* empty screens (MBUI.empty) inside panels */
+.panel .mbu-empty{padding:20px 12px}
+/* monthly chart: the year sits under the month on narrow screens ("Jan" / "’26") */
+@media (max-width:640px){.mcol small .yr{display:block}}
+/* ---- Help page ---- */
+.hp{display:flex;flex-direction:column;gap:22px;max-width:780px}
+.hp-h{margin:0 0 8px;padding:0 2px;font-size:11.5px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.hp-steps{margin:0;padding:14px 16px 14px 36px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);font-size:14px;color:var(--ink-2)}
+.hp-steps li{margin:6px 0;padding-left:4px}
+.hp-steps li::marker{font-weight:650;color:var(--accent)}
+.hp-steps b{color:var(--ink)}
+.hp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.hp-q + .hp-q{border-top:1px solid var(--border)}
+.hp-q summary{display:flex;align-items:center;gap:10px;min-height:48px;padding:10px 16px;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;list-style:none}
+.hp-q summary::-webkit-details-marker{display:none}
+.hp-q summary::after{content:"";flex:none;width:8px;height:8px;margin-left:auto;border-right:1.8px solid var(--muted);border-bottom:1.8px solid var(--muted);margin-top:-4px;transform:rotate(45deg);transition:transform .15s ease,margin .15s ease}
+.hp-q[open] summary::after{margin-top:4px;transform:rotate(-135deg)}
+.hp-q summary:hover{background:var(--surface-2)}
+.hp-q summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.hp-a{padding:0 16px 14px;font-size:13.5px;line-height:1.55;color:var(--ink-2);overflow-wrap:anywhere}
+.hp-a a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){.hp-q summary::after{transition:none}}
+/* 1.5: very long job names, employers or notes (even with no spaces) wrap instead of widening the phone layout */
+.resultline > *,.panelhead > *{min-width:0}
+.resultline > :last-child:not(:first-child){flex:none}
+.resultline > div,.resultline > span,.panelhead h3,.jobrow .mb-set-l b,#liveClock + .muted{overflow-wrap:anywhere}

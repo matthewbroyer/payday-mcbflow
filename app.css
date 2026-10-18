@@ -42,10 +42,10 @@ kbd{font-family:var(--mono);font-size:11px;padding:1px 5px;border:1px solid var(
 .linkbtn:hover{color:var(--accent-hover)}
 
 
-/* search in the page bar */
+/* filter box (Timecard) */
 .searchbox{position:relative;display:flex;align-items:center}
 .searchbox .uic{position:absolute;left:9px;width:16px;height:16px;color:var(--muted);pointer-events:none}
-.searchbox input{width:min(260px,26vw);height:var(--ctl-sm);padding:0 10px 0 32px;border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--surface-2);font-size:13.5px}
+.searchbox input{width:100%;height:var(--ctl-sm);padding:0 10px 0 32px;border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--surface-2);font-size:13.5px}
 .searchbox input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:var(--surface)}
 
 /* backup status chip (addendum "Backed up last") */
@@ -136,15 +136,8 @@ td .btn.sm{min-height:30px}
 
 /* empty states (NA-16 art + one line + why + one action) */
 .empty{text-align:center;padding:18px 12px 22px;color:var(--ink-2)}
-.empty .cu-art{margin-bottom:6px}
 .empty b{display:block;color:var(--ink);font-size:14.5px;margin-bottom:2px}
 .empty p{margin:0 0 10px;font-size:13.5px}
-
-/* toasts */
-.toasts{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:80;display:grid;gap:8px;width:max-content;max-width:calc(100vw - 24px);pointer-events:none}
-.toast{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--r);background:var(--ink);color:var(--bg);box-shadow:var(--shadow-pop);font-size:13.5px;pointer-events:auto}
-.toast button{border:0;background:none;color:inherit;font:600 13.5px var(--font);text-decoration:underline;text-underline-offset:2px;cursor:pointer;min-height:32px;padding:0 4px}
-@media (max-width:767px){.toasts{bottom:calc(68px + env(safe-area-inset-bottom))}}
 
 /* dialogs (8px corners, flat scrim, no blur) */
 .dlg{width:min(460px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:20px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface);color:var(--ink);box-shadow:var(--shadow-pop)}
@@ -152,13 +145,6 @@ td .btn.sm{min-height:30px}
 .dlg h2{margin:0 0 6px;font-size:18px;font-weight:650}
 .dlg-sub{margin:0 0 10px;color:var(--ink-2);font-size:13.5px}
 .dlg-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap}
-.dlg-head{display:flex;align-items:center;justify-content:space-between;margin:-6px 0 8px}
-.dlg-head h2{margin:0}
-.dlg.sheet{margin:auto auto 0;width:100%;max-width:100%;border-radius:var(--r-lg) var(--r-lg) 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
-.more-list{display:grid;gap:4px}
-.more-list button{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;border:0;border-radius:var(--r-sm);background:none;font-size:15px;text-align:left;cursor:pointer}
-.more-list button:hover{background:var(--surface-2)}
-.more-list button[aria-current="page"]{color:var(--accent);background:var(--accent-soft);font-weight:600}
 .import-sum{margin:0 0 10px;padding-left:20px;font-size:13.5px}
 .import-sum li{margin:2px 0}
 .import-sum .bad{color:var(--crit-ink)}
@@ -174,6 +160,6 @@ td .btn.sm{min-height:30px}
   .jobrow{flex-wrap:wrap}.jobrow>.actions{width:100%}
 }
 @media print{
-  .mb-side,.bnav,.page-bar,.no-print,.actions,.formactions,.toasts,.store-banner,.mbw,button{display:none!important}
+  .mb-side,.bnav,.page-bar,.no-print,.actions,.formactions,.mbu-toast,.store-banner,.mbw,button{display:none!important}
   .mb-main{margin-left:0!important}.card,.panel{box-shadow:none;break-inside:avoid}
 }

@@ -2,6 +2,25 @@
 
 Newest first. One entry per release, in plain words a user would understand.
 
+## 1.6 · 2026-10-17
+- **New Help page** (in the sidebar, and under More on phones): how to get started and answers to common questions about shifts, overtime, pay periods, paystubs, installing and your data.
+- **Search from the top bar.** Find any shift, paystub or job and open it. On a computer, press / or Ctrl+K. The Timecard keeps its own filter box.
+- **Settings save as you change them.** The Save settings button is gone, and the take-home estimate settings are now part of Payday settings.
+- **New here?** The welcome screen asks whether to start empty or with sample data. Payday starts empty unless you pick sample data. The sample-data notice on Home has one button: Remove sample data (with Undo).
+- **Deleting a job** happens right away, with Undo, the same as shifts and paystubs.
+- **Backups and exports save right away** even when there are no shifts yet; the message says what was saved and the file name. Shared pictures have the date in their file name.
+- The Home banner reads **"This pay period"**, with today's date and your hours so far.
+- Month labels on the earnings chart show the year (Jan '26).
+- Messages, the More menu, What's new and empty pages look and work the same as in the other mcbflow.com apps.
+- Your shifts, paystubs, jobs and settings are unchanged.
+
+## 1.5 · 2026-10-17
+- **Clear all data now asks you to type DELETE**, the same in every mcbflow.com app. The same box offers Save a backup first.
+- A very long job name, employer or note no longer makes Home, Pay, Paycheck check, Reports or Settings scroll sideways on phones; it wraps instead.
+- Account pop-up spacing fixed.
+- The welcome banner art is no longer cut off on phones, and the banner keeps one height.
+- Your shifts, paystubs, jobs and settings are unchanged.
+
 ## 1.4 · 2026-10-16
 - **New Settings page.** Appearance, Account & sync, Payday settings (your jobs, pay rates, pay periods and overtime rules), the take-home estimate, Backup & data, Install and About, in that order, the same as the other mcbflow.com apps. On phones it's the first item under More.
 - **Account button** in the top bar: "Sign in" when you're signed out, your initial and a sync dot when you're signed in. New "Keep me signed in on this device" switch (on by default; off signs you out when the browser closes).
